@@ -46,7 +46,9 @@ class TrialRecord:
     final_choice: str
     intervened: bool     # final differs from raw / 최종이 원선택과 다름
     correct: bool
-    persistence_error: bool
+    prev_rule_error: bool  # previous-rule-aligned error (Amendment B) / 이전 규칙 정렬 오류
+    block: int
+    rule_shift: bool
 
 
 @dataclass
@@ -61,6 +63,15 @@ class ReplayResult:
     # 평면 호출 순서 로그: ("decide"|"score"|"feedback", trial 번호).
     # 누출 방지 테스트가 순서를 검증하는 데 사용한다.
     call_log: List[tuple] = field(default_factory=list)
+
+    # Analysis-side side channel: correctness of the RAW choice per
+    # trial, for the direct intervention safety metrics (§11.4).
+    # Computed AFTER the final choice is frozen; never exposed to
+    # controllers.
+    # 분석 전용 사이드 채널: 직접 개입 안전성 지표(11.4절)를 위한
+    # trial별 원선택 정오. 최종 선택 동결 이후 계산되며 컨트롤러에는
+    # 절대 노출되지 않는다.
+    raw_correct_by_trial: Dict[int, bool] = field(default_factory=dict)
 
     def intervention_trials(self) -> set:
         """Trial numbers where the controller intervened — the yoking
@@ -123,6 +134,14 @@ def run_replay(
             controller.observe_feedback(score.correct)
             result.call_log.append(("feedback", row.trial_number))
 
+        # Analysis-side raw-choice scoring (after freezing; not logged,
+        # never passed to any controller).
+        # 분석 전용 원선택 채점 (동결 이후; 로그 없음, 어떤 컨트롤러에도
+        # 전달되지 않음).
+        result.raw_correct_by_trial[row.trial_number] = evaluator.score(
+            row.trial_number, row.parsed_choice
+        ).correct
+
         result.records.append(
             TrialRecord(
                 trial_number=row.trial_number,
@@ -130,40 +149,135 @@ def run_replay(
                 final_choice=final_choice,
                 intervened=final_choice != row.parsed_choice,
                 correct=score.correct,
-                persistence_error=score.persistence_error,
+                prev_rule_error=score.prev_rule_error,
+                block=score.block,
+                rule_shift=score.rule_shift,
             )
         )
     return result
 
 
 def summarize(result: ReplayResult) -> Dict[str, float]:
-    """Repetition-level metrics as defined in ANALYSIS_PLAN.md §6.
-    ANALYSIS_PLAN.md 6절에 정의된 repetition 단위 지표."""
+    """Repetition-level metrics per ANALYSIS_PLAN.md §6 and Amendment B
+    (§11.4). / ANALYSIS_PLAN.md 6절 및 수정안 B(11.4절)의 repetition 단위
+    지표."""
+    import math
+
     n = max(1, len(result.records))
     records = result.records
-
     interventions = [r for r in records if r.intervened]
 
-    # Single fixed definition (plan §6): an intervention is productive
-    # iff at least one of the next two FINAL choices is correct.
-    # 단일 고정 정의(계획 6절): 개입은 이후 두 '최종' 선택 중 하나 이상이
-    # 정답일 때에만 생산적이다.
-    productive = 0
+    # --- Direct intervention safety metrics (§11.4) ---
+    # --- 직접 개입 안전성 지표 (11.4절) ---
+    # Attribution needs the raw choice's own correctness, which we can
+    # infer analysis-side: an intervention changed raw -> final, so raw
+    # was correct iff final is incorrect AND raw equals the rule... we
+    # cannot see the rule here. Instead: raw correctness is derived from
+    # the pair (intervened, correct) ONLY when it is decidable — for
+    # non-intervened trials raw == final. For intervened trials the
+    # evaluator's per-trial correctness of the RAW choice is needed, so
+    # we recompute it from the invariant: raw was correct iff raw ==
+    # final would have been correct — undecidable here. Therefore the
+    # runner passes raw correctness through the evaluator (see
+    # run_replay: raw_score below).
+    # 이 함수는 아래 run_replay가 채워 주는 raw 채점 결과에 의존한다.
+    corrective = sum(1 for r in interventions if (not _raw_correct(result, r)) and r.correct)
+    harmful = sum(1 for r in interventions if _raw_correct(result, r) and not r.correct)
+    precision_hits = sum(1 for r in interventions if not _raw_correct(result, r))
+
+    # subsequent_success_rate (DEMOTED per §11.4; was "productive rate"):
+    # satisfied iff at least one of the next two FINAL choices is
+    # correct. Descriptive only — later luck can satisfy it.
+    # subsequent_success_rate (11.4절에 따라 강등; 구 productive rate):
+    # 이후 두 최종 선택 중 하나 이상이 정답이면 만족. 기술 지표 전용.
+    subsequent = 0
     by_index = {r.trial_number: i for i, r in enumerate(records)}
     for r in interventions:
         i = by_index[r.trial_number]
-        nxt = records[i + 1 : i + 3]
-        if any(x.correct for x in nxt):
-            productive += 1
+        if any(x.correct for x in records[i + 1 : i + 3]):
+            subsequent += 1
+
+    # --- old_rule_reentry (§11.4): prev-rule-aligned error occurring
+    # after at least one earlier correct trial in the same block ---
+    # --- old_rule_reentry (11.4절): 같은 블록에서 앞선 정답 이후에
+    # 나오는 이전 규칙 정렬 오류 ---
+    reentry = 0
+    seen_correct_in_block: Dict[int, bool] = {}
+    for r in records:
+        if r.block > 1 and r.prev_rule_error and seen_correct_in_block.get(r.block, False):
+            reentry += 1
+        if r.correct:
+            seen_correct_in_block[r.block] = True
+
+    # --- choice entropy (§11.4): log2, unparsable excluded ---
+    # --- 선택 엔트로피 (11.4절): log2, 파싱 불가 제외 ---
+    counts: Dict[str, int] = {}
+    unparsable = 0
+    for r in records:
+        if r.final_choice:
+            counts[r.final_choice] = counts.get(r.final_choice, 0) + 1
+        else:
+            unparsable += 1
+    total_parsed = sum(counts.values())
+    entropy = 0.0
+    if total_parsed > 0:
+        for c in counts.values():
+            p = c / total_parsed
+            entropy -= p * math.log2(p)
+
+    # --- recovery latency (§11.4): per post-shift block, 1-based
+    # position of the first correct final choice; censored at block
+    # length if none ---
+    # --- 회복 지연 (11.4절): 전환 후 블록별 첫 정답의 1-기반 위치,
+    # 없으면 블록 길이에서 중도절단 ---
+    block_positions: Dict[int, int] = {}
+    first_correct_pos: Dict[int, int] = {}
+    block_lengths: Dict[int, int] = {}
+    for r in records:
+        pos = block_positions.get(r.block, 0) + 1
+        block_positions[r.block] = pos
+        block_lengths[r.block] = pos
+        if r.correct and r.block not in first_correct_pos:
+            first_correct_pos[r.block] = pos
+    latencies = []
+    censored = 0
+    for block, length in block_lengths.items():
+        if block == 1:
+            continue
+        if block in first_correct_pos:
+            latencies.append(first_correct_pos[block])
+        else:
+            latencies.append(length)
+            censored += 1
 
     return {
         "n_trials": float(n),
         "total_accuracy": sum(r.correct for r in records) / n,
-        "persistence_error_count": float(sum(r.persistence_error for r in records)),
+        "prev_rule_error_count": float(sum(r.prev_rule_error for r in records)),
+        "old_rule_reentry_count": float(reentry),
+        "choice_entropy": round(entropy, 4),
+        "unparsable_count": float(unparsable),
+        "recovery_latency_mean": round(sum(latencies) / len(latencies), 4) if latencies else -1.0,
+        "latency_censored_count": float(censored),
         "intervention_count": float(len(interventions)),
-        # None-equivalent (-1) when undefined: plan §6 excludes zero-
-        # intervention repetitions from rate analyses instead of coding 0.
-        # 정의 불가 시 -1: 계획 6절에 따라 개입 0회 repetition은 비율
-        # 분석에서 0이 아니라 제외 처리한다.
-        "productive_rate": (productive / len(interventions)) if interventions else -1.0,
+        "intervention_coverage": round(len(interventions) / n, 4),
+        "corrective_override_count": float(corrective),
+        "harmful_override_count": float(harmful),
+        "net_correction": float(corrective - harmful),
+        # -1 = undefined (zero interventions), excluded from rate
+        # analyses per plan §6 / -1 = 정의 불가(개입 0회), 계획 6절에
+        # 따라 비율 분석에서 제외.
+        "intervention_precision": (precision_hits / len(interventions)) if interventions else -1.0,
+        "subsequent_success_rate": (subsequent / len(interventions)) if interventions else -1.0,
     }
+
+
+def _raw_correct(result: ReplayResult, record: TrialRecord) -> bool:
+    """Whether the RAW choice would have been correct on this trial.
+    이 trial에서 원선택이 정답이었을지 여부.
+
+    Filled by run_replay via the raw-score side channel (analysis-side
+    only; controllers never see it).
+    run_replay가 raw 채점 사이드 채널로 채운다 (분석 전용, 컨트롤러는
+    보지 못한다)."""
+    return result.raw_correct_by_trial.get(record.trial_number, False)

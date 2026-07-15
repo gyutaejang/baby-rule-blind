@@ -68,9 +68,14 @@ def paired_permutation_p(diffs: Sequence[float], seed: int = SEED) -> float:
     return (hits + 1) / (N_PERMUTATIONS + 1)
 
 
-def paired_bootstrap_ci(diffs: Sequence[float], seed: int = SEED) -> Tuple[float, float]:
-    """Percentile bootstrap 95% CI of the mean within-pair difference.
-    짝 내 차이 평균의 백분위 bootstrap 95% CI."""
+def paired_bootstrap_ci_level(
+    diffs: Sequence[float], level: float = 0.95, seed: int = SEED
+) -> Tuple[float, float]:
+    """Percentile bootstrap CI of the mean within-pair difference at the
+    given coverage level (0.95 for effect CIs, 0.90 for the §11.5
+    equivalence test).
+    주어진 수준의 짝 내 차이 평균 백분위 bootstrap CI (효과 CI는 0.95,
+    11.5절 동등성 검정은 0.90)."""
     n = len(diffs)
     if n == 0:
         return float("nan"), float("nan")
@@ -79,9 +84,15 @@ def paired_bootstrap_ci(diffs: Sequence[float], seed: int = SEED) -> Tuple[float
     for _ in range(N_BOOTSTRAP):
         means.append(sum(diffs[rng.randrange(n)] for _ in range(n)) / n)
     means.sort()
-    lo = means[int(0.025 * N_BOOTSTRAP)]
-    hi = means[min(N_BOOTSTRAP - 1, int(0.975 * N_BOOTSTRAP))]
+    alpha = (1.0 - level) / 2.0
+    lo = means[int(alpha * N_BOOTSTRAP)]
+    hi = means[min(N_BOOTSTRAP - 1, int((1.0 - alpha) * N_BOOTSTRAP))]
     return lo, hi
+
+
+def paired_bootstrap_ci(diffs: Sequence[float], seed: int = SEED) -> Tuple[float, float]:
+    """95% CI shorthand. / 95% CI 축약형."""
+    return paired_bootstrap_ci_level(diffs, level=0.95, seed=seed)
 
 
 def rank_biserial(diffs: Sequence[float]) -> float:
@@ -177,34 +188,47 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
     # family; everything else is secondary (plan §7).
     # (비교, family): 1차 지표에 대한 H1/H2가 primary family, 나머지는
     # 전부 secondary (계획 7절).
+    # Primary family FIXED at four tests per model (Amendment B §11.5),
+    # explicitly including the currently-unfavorable Full-vs-Yoked
+    # prev_rule_error contrast.
+    # 1차 family는 모델당 4개 검정으로 고정(수정안 B 11.5절), 현재 불리한
+    # Full vs Yoked prev_rule_error 대비를 명시적으로 포함한다.
     comparison_specs = [
         ("RuleBlindFull", "RawLLM", "total_accuracy", "primary"),
-        ("RuleBlindFull", "RawLLM", "persistence_error_count", "primary"),
+        ("RuleBlindFull", "RawLLM", "prev_rule_error_count", "primary"),
         ("RuleBlindFull", "YokedRandom", "total_accuracy", "primary"),
-        ("RuleBlindFull", "YokedRandom", "persistence_error_count", "primary"),
+        ("RuleBlindFull", "YokedRandom", "prev_rule_error_count", "primary"),
         ("RuleBlindFull", "NoVeto", "total_accuracy", "secondary"),
-        ("RuleBlindFull", "NoVeto", "persistence_error_count", "secondary"),
+        ("RuleBlindFull", "NoVeto", "prev_rule_error_count", "secondary"),
+        # Information-matched baseline (Amendment B §11.2/§11.5).
+        # 정보량 동일 기준선 (수정안 B 11.2/11.5절).
+        ("RuleBlindFull", "WSLSBudgeted", "total_accuracy", "secondary"),
+        ("RuleBlindFull", "WSLSBudgeted", "prev_rule_error_count", "secondary"),
         ("TrajectoryOnly", "RawLLM", "total_accuracy", "secondary"),
-        ("TrajectoryOnly", "RawLLM", "persistence_error_count", "secondary"),
-        ("OracleFull", "RawLLM", "total_accuracy", "ceiling"),
-        ("OracleFull", "RawLLM", "persistence_error_count", "ceiling"),
+        ("TrajectoryOnly", "RawLLM", "prev_rule_error_count", "secondary"),
+        # Oracle-assisted policy reference — NOT a ceiling (§11.6).
+        # oracle 보조 정책 참조 — 상한선 아님 (11.6절).
+        ("OracleFull", "RawLLM", "total_accuracy", "reference"),
+        ("OracleFull", "RawLLM", "prev_rule_error_count", "reference"),
         # NOTE: productive_rate is intentionally NOT a paired comparison
         # against RawLLM — the baseline never intervenes, so its rate is
         # undefined on every repetition and all pairs would drop. It is
-        # reported descriptively instead (see descriptive_productive_rate).
+        # reported descriptively instead (see descriptive_subsequent_success).
         # 참고: productive_rate는 의도적으로 RawLLM과의 paired 비교에서
         # 제외한다 — 기준선은 개입이 없어 모든 repetition에서 정의 불가라
         # 짝이 전부 제외되기 때문이다. 대신 기술 통계로 보고한다
-        # (descriptive_productive_rate 참조).
+        # (descriptive_subsequent_success 참조).
     ]
 
     out: List[Dict[str, object]] = []
     for model in models:
         results = []
+        raw_pvalues: List[float] = []
         for cond_a, cond_b, metric, family in comparison_specs:
             diffs, dropped = paired_values(rows, model, cond_a, cond_b, metric)
             p = paired_permutation_p(diffs)
             lo, hi = paired_bootstrap_ci(diffs)
+            raw_pvalues.append(p)
             results.append(
                 {
                     "label": label,
@@ -218,21 +242,53 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
                     "ci_low": round(lo, 4),
                     "ci_high": round(hi, 4),
                     "rank_biserial": round(rank_biserial(diffs), 4),
+                    # Rounded for display only; Holm below uses the
+                    # full-precision value (Amendment B §11.5).
+                    # 표시용 반올림. 아래 Holm은 원정밀도 값을 사용한다
+                    # (수정안 B 11.5절).
                     "p_raw": round(p, 5),
                 }
             )
-        # Holm within each family, within each model (plan §7).
-        # 모델별·family별 Holm 보정 (계획 7절).
-        for family in ("primary", "secondary", "ceiling"):
-            fam = [r for r in results if r["family"] == family]
-            adjusted = holm_correct([float(r["p_raw"]) for r in fam])
-            for r, adj in zip(fam, adjusted):
-                r["p_holm"] = round(adj, 5)
+        # Holm within each family, within each model, on FULL-PRECISION
+        # p-values (§11.5). / 모델별·family별, 원정밀도 p값에 Holm 보정.
+        for family in ("primary", "secondary", "reference"):
+            idxs = [i for i, r in enumerate(results) if r["family"] == family]
+            adjusted = holm_correct([raw_pvalues[i] for i in idxs])
+            for i, adj in zip(idxs, adjusted):
+                # Permutation resolution floor: report "<.001" (§11.5).
+                # permutation 해상도 하한: "<.001"로 보고 (11.5절).
+                results[i]["p_holm"] = "<.001" if adj < 0.001 else round(adj, 5)
         out.extend(results)
+
+        # TrajectoryOnly equivalence (§11.5): declared iff the paired-
+        # bootstrap 90% CI of the accuracy difference lies entirely
+        # within the pre-registered SESOI of ±0.02 (TOST logic).
+        # TrajectoryOnly 동등성 (11.5절): 정확도 차이의 paired bootstrap
+        # 90% CI가 사전 등록 SESOI ±0.02 안에 완전히 들어올 때만 선언.
+        diffs, _ = paired_values(rows, model, "TrajectoryOnly", "RawLLM", "total_accuracy")
+        lo90, hi90 = paired_bootstrap_ci_level(diffs, level=0.90)
+        verdict = "equivalent" if (lo90 > -0.02 and hi90 < 0.02) else "inconclusive"
+        out.append(
+            {
+                "label": label,
+                "model": model,
+                "comparison": "TrajectoryOnly vs RawLLM",
+                "metric": "total_accuracy (equivalence, SESOI ±0.02)",
+                "family": "equivalence",
+                "n_pairs": len(diffs),
+                "n_dropped": 0,
+                "mean_diff": round(sum(diffs) / len(diffs), 4) if diffs else float("nan"),
+                "ci_low": round(lo90, 4),
+                "ci_high": round(hi90, 4),
+                "rank_biserial": "",
+                "p_raw": "",
+                "p_holm": verdict,
+            }
+        )
     return out
 
 
-def descriptive_productive_rate(rows: List[Dict[str, str]]) -> List[Dict[str, object]]:
+def descriptive_subsequent_success(rows: List[Dict[str, str]]) -> List[Dict[str, object]]:
     """Descriptive productive-rate summary per model and condition,
     excluding undefined (-1) repetitions per plan §6 and reporting how
     many were excluded.
@@ -244,7 +300,7 @@ def descriptive_productive_rate(rows: List[Dict[str, str]]) -> List[Dict[str, ob
     for model in models:
         for condition in conditions:
             values = [
-                float(r["productive_rate"])
+                float(r["subsequent_success_rate"])
                 for r in rows
                 if r["model"] == model and r["condition"] == condition
             ]
@@ -257,7 +313,7 @@ def descriptive_productive_rate(rows: List[Dict[str, str]]) -> List[Dict[str, ob
                     "condition": condition,
                     "n_defined": len(defined),
                     "n_excluded_zero_interventions": len(values) - len(defined),
-                    "productive_rate_mean": round(sum(defined) / len(defined), 4),
+                    "subsequent_success_rate_mean": round(sum(defined) / len(defined), 4),
                 }
             )
     return out
@@ -286,8 +342,8 @@ def main() -> None:
             f"{r['mean_diff']:>8}{ci:>18}{r['rank_biserial']:>7}{r['p_holm']:>9}"
         )
     print("\nproductive rate (descriptive) / 생산적 개입 비율 (기술 통계):")
-    desc = descriptive_productive_rate(load_summary(summary_path))
-    desc_path = PROJECT_ROOT / "results" / "study1_productive_rate.csv"
+    desc = descriptive_subsequent_success(load_summary(summary_path))
+    desc_path = PROJECT_ROOT / "results" / "study1_subsequent_success.csv"
     with open(desc_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
@@ -296,14 +352,14 @@ def main() -> None:
                 "condition",
                 "n_defined",
                 "n_excluded_zero_interventions",
-                "productive_rate_mean",
+                "subsequent_success_rate_mean",
             ],
         )
         writer.writeheader()
         writer.writerows(desc)
     for d in desc:
         print(
-            f"  {d['model']:<8}{d['condition']:<16}rate={d['productive_rate_mean']:<8}"
+            f"  {d['model']:<8}{d['condition']:<16}rate={d['subsequent_success_rate_mean']:<8}"
             f"n={d['n_defined']} excluded={d['n_excluded_zero_interventions']}"
         )
 

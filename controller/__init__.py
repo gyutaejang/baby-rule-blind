@@ -8,6 +8,7 @@ from controller.base import RULES, FeedbackAwareController, PublicTrial, RuleBli
 from controller.passthrough import PassthroughController
 from controller.rule_blind_full import RuleBlindFullController
 from controller.trajectory_only import TrajectoryOnlyController
+from controller.wsls import WSLSController
 
 __all__ = [
     "RULES",
@@ -17,4 +18,5 @@ __all__ = [
     "PassthroughController",
     "RuleBlindFullController",
     "TrajectoryOnlyController",
+    "WSLSController",
 ]

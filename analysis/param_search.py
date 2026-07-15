@@ -46,14 +46,14 @@ MODELS = ("claude", "gpt")
 N_REPS = 30
 
 # The full grid, stated openly (288 configurations; rescue_cooldown is
-# redundant when rescue_error_streak=0, and those duplicate rows are kept
+# redundant when rescue_failure_threshold=0, and those duplicate rows are kept
 # for transparency rather than silently deduplicated).
-# 공개된 전체 grid (288개 설정; rescue_error_streak=0일 때 rescue_cooldown은
+# 공개된 전체 grid (288개 설정; rescue_failure_threshold=0일 때 rescue_cooldown은
 # 무의미하지만, 그 중복 행도 조용히 제거하지 않고 투명하게 남긴다).
 GRID = {
     "error_streak_to_open": [1, 2, 3],
     "veto_window": [2, 3, 4, 5],
-    "rescue_error_streak": [0, 2, 3, 4],  # 0 = rescue disabled / 0 = rescue 비활성화
+    "rescue_failure_threshold": [0, 2, 3, 4],  # 0 = rescue disabled / 0 = rescue 비활성화
     "rescue_cooldown": [4, 6, 8],
     "belief_confirm_streak": [1, 2],
 }
@@ -81,34 +81,51 @@ def main() -> None:
             # 스트림마다 새 컨트롤러 — 컨트롤러는 상태를 가진다.
             s = summarize(run_replay(RuleBlindFullController(**params), stream, evaluator))
             accs.append(s["total_accuracy"])
-            persists.append(s["persistence_error_count"])
+            persists.append(s["prev_rule_error_count"])
             intervs.append(s["intervention_count"])
         row = dict(params)
         row.update(
             {
                 "mean_accuracy": round(sum(accs) / len(accs), 4),
-                "mean_persistence": round(sum(persists) / len(persists), 4),
+                "mean_prev_rule_error": round(sum(persists) / len(persists), 4),
                 "mean_interventions": round(sum(intervs) / len(intervs), 4),
+                "max_interventions": max(intervs),
             }
         )
         rows.append(row)
 
-    # Rank by the stated objective only. / 명시된 목적함수로만 순위를 매긴다.
+    # Constrained selection rule, CODIFIED (Amendment B §11.6):
+    # maximize pooled accuracy subject to mean prev_rule_error <= 9.
+    # The intervention constraint is enforced structurally by the hard
+    # per-repetition budget inside the controller (§11.2), which the
+    # max_interventions column verifies.
+    # 제약 선정 규칙의 코드화 (수정안 B 11.6절): 평균 prev_rule_error <= 9
+    # 제약 하에서 합산 정확도 최대화. 개입 제약은 컨트롤러 내부의 하드
+    # repetition 예산(11.2절)이 구조적으로 강제하며 max_interventions
+    # 열로 검증한다.
     rows.sort(key=lambda r: -r["mean_accuracy"])
+    eligible = [r for r in rows if r["mean_prev_rule_error"] <= 9.0]
+    selected = eligible[0] if eligible else None
 
     RESULTS_DIR.mkdir(exist_ok=True)
     out_path = RESULTS_DIR / "param_search_rule_blind_full.csv"
-    columns = keys + ["mean_accuracy", "mean_persistence", "mean_interventions"]
+    columns = keys + ["mean_accuracy", "mean_prev_rule_error", "mean_interventions", "max_interventions"]
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns)
         writer.writeheader()
         writer.writerows(rows)
 
     header = "".join(f"{k[:12]:>14}" for k in columns)
+    print("top 10 by accuracy (unconstrained view) / 정확도 상위 10 (제약 미적용 표시):")
     print(header)
     for row in rows[:10]:
         print("".join(f"{row[k]:>14}" for k in columns))
-    print(f"\n{len(rows)} configurations -> {out_path}")
+    print(f"\nSELECTED (constraint-filtered) / 선택된 설정 (제약 적용):")
+    if selected is None:
+        print("  no configuration satisfies the constraints / 제약을 만족하는 설정 없음")
+    else:
+        print("".join(f"{selected[k]:>14}" for k in columns))
+    print(f"\n{len(rows)} configurations ({len(eligible)} eligible) -> {out_path}")
 
 
 if __name__ == "__main__":

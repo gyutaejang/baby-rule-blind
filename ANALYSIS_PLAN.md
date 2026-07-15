@@ -1,7 +1,7 @@
 # Rule-Blind Controller Study — Frozen Analysis Plan
 # Rule-Blind 컨트롤러 연구 — 동결된 분석계획
 
-**Version / 버전**: 1.1 (Amendment A appended 2026-07-15; original v1.0 text unchanged)
+**Version / 버전**: 1.2 (Amendments A & B appended 2026-07-15; original v1.0 text unchanged)
 **Date frozen / 동결일**: 2026-07-15
 **Status / 상태**: FROZEN before any new controller code is written or executed.
 새 컨트롤러 코드를 작성·실행하기 전에 동결됨. v1.1은 Study 2 스트림 생성
@@ -516,3 +516,265 @@ The paper reports, in a table, which data touched development:
 | Archived Claude 30 streams (2026-04) | development / 개발 | YES |
 | Archived GPT-4o 30 streams (2026-04) | development / 개발 | YES |
 | All Study 2 new-model streams | held-out confirmatory / 확증 | NO — first contact after study2-freeze / 동결 후 최초 접촉 |
+
+---
+
+## 11. Amendment B (v1.2, 2026-07-15) — Design corrections before freeze
+## 11. 수정안 B (v1.2, 2026-07-15) — 동결 전 설계 교정
+
+Adopted after an independent design review of the v2 codebase, BEFORE the
+study2-freeze tag and before any Study 2 data. Where this amendment
+conflicts with §1–§10, this amendment governs.
+v2 코드베이스에 대한 독립 설계 검토 후, study2-freeze 태그와 Study 2
+데이터 이전에 채택. §1–§10과 상충하는 부분은 본 수정안이 우선한다.
+
+### 11.1 Claim and terminology / 주장과 용어
+
+The LLM in this design is memoryless (single-turn prompts, no history,
+no feedback), so its repeated choices reflect stable output preferences
+(e.g., 79–89% "color" in the archived streams), not learned-then-
+unrelinquished rules. Accordingly:
+본 설계의 LLM은 무기억이므로(단일 턴, 이력·피드백 없음) 반복 선택은
+학습 후 포기하지 못한 규칙이 아니라 안정적 출력 선호(보관 스트림에서
+color 79–89%)를 반영한다. 따라서:
+
+- The term "persistence/perseveration error" is REPLACED by
+  **previous-rule-aligned error** everywhere (code field:
+  `prev_rule_error`). No claim of cognitive perseveration in the LLM is
+  made anywhere in the paper.
+  "고착 오류"라는 용어를 전면 **previous-rule-aligned error**(이전 규칙
+  정렬 오류, 코드 필드 `prev_rule_error`)로 교체한다. LLM의 인지적
+  고착 주장은 논문 어디에도 하지 않는다.
+- The system is described as a **sparse outcome-feedback supervisor for
+  memoryless LLM outputs**. A condition in which the LLM itself receives
+  history/feedback (online condition) would be required to study
+  cognitive perseveration and is explicitly deferred to a separate,
+  separately-frozen experiment.
+  시스템은 **무기억 LLM 출력에 대한 희소 outcome-feedback supervisor**로
+  기술한다. LLM 자체가 이력·피드백을 받는 온라인 조건은 인지적 고착
+  연구에 필요하며, 별도로 동결되는 별도 실험으로 명시적으로 미룬다.
+- The headline claim is NOT raw accuracy (an unlimited feedback policy
+  trivially wins — see §11.2) but **efficiency and safety under a
+  limited intervention budget**.
+  핵심 주장은 원 정확도가 아니라(무제한 피드백 정책이 자명하게 이긴다,
+  §11.2 참조) **제한된 개입 예산 하에서의 효율과 안전성**이다.
+
+### 11.2 Information-matched baselines and hard budget
+### 11.2 정보량 동일 기준선과 하드 예산
+
+Full receives per-trial outcome information that RawLLM does not, so
+Full − RawLLM confounds algorithm quality with information quantity.
+Fixes:
+Full은 RawLLM이 받지 못하는 trial별 정오 정보를 받으므로 Full − RawLLM은
+알고리즘 품질과 정보량 효과를 혼동한다. 교정:
+
+1. **Hard intervention budget**: RuleBlindFull gains
+   `max_interventions_per_rep = 9` (25% of 36 trials) as a HARD per-
+   repetition cap. The "supervisor regime" claim is now enforced, not a
+   mean tendency.
+   **하드 개입 예산**: RuleBlindFull에 repetition당 하드 상한
+   `max_interventions_per_rep = 9`(36 trial의 25%)를 도입한다. "감독자
+   체제" 주장은 이제 평균 경향이 아니라 강제된 제약이다.
+2. **`WSLSBudgeted`** (new condition, information-matched baseline):
+   win-stay/lose-shift supervisor under the SAME hard budget (9).
+   Policy (frozen): belief = dimension of the most recent correct final
+   choice; while a belief exists, override any raw choice ≠ belief;
+   when the belief dimension produces an incorrect outcome, clear it and
+   set the shift target to the least-recently-tried other dimension;
+   while no belief exists, override toward the shift target if one is
+   set. All overrides stop when the budget is exhausted.
+   **`WSLSBudgeted`** (신규 조건, 정보량 동일 기준선): 같은 하드 예산(9)
+   하의 win-stay/lose-shift supervisor. 정책(동결): belief = 가장 최근
+   정답을 낸 최종 선택의 차원; belief가 있는 동안 raw ≠ belief면
+   override; belief 차원이 오답을 내면 belief를 지우고 가장 오래 시도
+   안 된 다른 차원을 shift 대상으로 설정; belief가 없는 동안 shift
+   대상이 있으면 그쪽으로 override. 예산 소진 시 모든 override 중지.
+3. **`WSLSUnlimited`** (descriptive reference only): the same policy
+   with no budget — the "player regime" reference (~unbounded overrides,
+   accuracy ≈ .86 on archived data). Reported descriptively; never a
+   hypothesis test target.
+   **`WSLSUnlimited`** (기술적 참조 전용): 예산 없는 같은 정책 — "선수
+   체제" 참조. 기술적으로만 보고하며 가설 검정 대상이 아니다.
+4. Secondary comparison added: Full vs WSLSBudgeted on both primary
+   metrics (Holm within the secondary family).
+   2차 비교 추가: Full vs WSLSBudgeted (1차 지표 2종, secondary family
+   내 Holm).
+
+### 11.3 Schedule generalization (Study 2) / 일정 일반화 (Study 2)
+
+All 60 archived streams share ONE fixed schedule, and controller
+parameters (including cooldown = 6) were selected on it. Study 2 must
+not reuse it.
+보관 스트림 60개는 모두 하나의 고정 일정을 공유하며 컨트롤러
+파라미터(cooldown = 6 포함)가 그 위에서 선택되었다. Study 2는 이를
+재사용하지 않는다.
+
+- Per-repetition randomized schedules, generated by
+  `scripts/generate_schedules.py` with a committed master seed
+  (20260715) BEFORE any API call: 36 trials; block lengths drawn from
+  {5, 6, 7} (final remainder 4–8 allowed by the frozen partition rule in
+  the script); first rule uniform; each subsequent rule uniform over the
+  other two (no immediate repeat).
+  repetition별 무작위 일정을 API 호출 전에 커밋된 마스터 시드(20260715)로
+  `scripts/generate_schedules.py`가 생성한다: 36 trials; 블록 길이는
+  {5,6,7}에서 추출(스크립트의 동결된 분할 규칙에 따라 마지막 블록 4–8
+  허용); 첫 규칙 균등, 이후 규칙은 나머지 둘 중 균등(연속 반복 없음).
+- One ground-truth file per repetition; all schedule files and their
+  hashes committed before generation; the same raw stream is replayed
+  through all conditions on its own schedule (paired structure kept).
+  repetition마다 별도 ground truth 파일; 모든 일정 파일과 해시를 생성
+  전에 커밋; 각 raw 스트림은 자기 일정 위에서 모든 조건에 재생되어
+  paired 구조를 유지한다.
+
+### 11.4 Frozen metric definitions / 동결된 지표 정의
+
+Computed per repetition on final choices / repetition 단위, 최종 선택 기준:
+
+- **prev_rule_error** (renamed from persistence error): final ==
+  previous block's rule, incorrect, block > 1.
+  이전 블록 규칙과 같고 오답이며 block > 1.
+- **old_rule_reentry**: within a block (block > 1), a trial with final
+  == previous block's rule and incorrect, occurring AFTER at least one
+  correct final choice earlier in the same block.
+  같은 블록에서 앞서 1회 이상 정답을 낸 이후에 나오는, 이전 블록 규칙과
+  같은 오답 trial.
+- **choice_entropy**: Shannon entropy, log base 2, over the empirical
+  distribution of final choices in {color, shape, number}; unparsable
+  ("") choices are excluded from the distribution and reported
+  separately as `unparsable_count`.
+  {color, shape, number}에 대한 최종 선택 경험 분포의 Shannon 엔트로피
+  (log2). 파싱 불가("")는 분포에서 제외하고 `unparsable_count`로 별도
+  보고.
+- **recovery_latency**: per block (block > 1), 1-based within-block
+  position of the first correct final choice; if none, CENSORED at the
+  block length (value = block length, `latency_censored_count`
+  incremented). Repetition metric = mean over blocks; censored counts
+  reported alongside.
+  블록별(block > 1) 첫 정답의 블록 내 1-기반 위치; 없으면 블록 길이에서
+  중도절단(값 = 블록 길이, `latency_censored_count` 증가). repetition
+  지표 = 블록 평균, 중도절단 수 병기.
+- **Direct intervention safety metrics / 직접 개입 안전성 지표**:
+  `corrective_override` (raw incorrect → final correct),
+  `harmful_override` (raw correct → final incorrect),
+  `intervention_precision` (= interventions where raw was incorrect /
+  interventions), `net_correction` (= corrective − harmful),
+  `intervention_coverage` (= interventions / trials).
+- **subsequent_success_rate** (DEMOTED, was "productive intervention
+  rate"): the §6 definition is renamed and made descriptive-only — an
+  intervention can satisfy it by later luck even if itself wrong. The
+  direct safety metrics above replace it in the main text.
+  (강등, 구 "생산적 개입 비율"): §6 정의는 이름을 낮춰 기술 지표로만
+  둔다 — 개입 자체가 틀려도 이후 우연으로 만족될 수 있기 때문. 본문
+  안전성 지표는 위의 직접 지표로 대체한다.
+
+### 11.5 Statistics corrections / 통계 교정
+
+- **Primary family fixed at FOUR tests per model** (resolving the §7
+  ambiguity): H1 (Full vs RawLLM) and H2 (Full vs YokedRandom), each on
+  total accuracy AND prev_rule_error. The currently-unfavorable Full vs
+  Yoked prev_rule_error contrast (Study 1 Claude: +0.57) is EXPLICITLY
+  KEPT primary — declared here before Study 2.
+  **1차 family는 모델당 4개 검정으로 확정**(§7의 모호성 해소): H1(Full
+  vs RawLLM)·H2(Full vs YokedRandom) × 정확도·prev_rule_error. 현재
+  불리한 Full vs Yoked prev_rule_error(+0.57, Study 1 Claude)도 명시적
+  으로 1차에 유지한다 — Study 2 전에 선언.
+- Holm correction is applied to FULL-PRECISION p-values; rounding only
+  at output.
+  Holm 보정은 반올림 전 원정밀도 p값에 적용하고 출력 시에만 반올림한다.
+- Permutation p-values at the resolution floor are reported as
+  **p < .001** (10,000 permutations → smallest attainable ≈ .0001).
+  해상도 하한의 permutation p값은 **p < .001**로 보고한다.
+- **TrajectoryOnly equivalence**: "no effect" claims require a
+  pre-registered SESOI of ±0.02 accuracy — equivalence is declared iff
+  the paired-bootstrap 90% CI of the accuracy difference lies entirely
+  within ±0.02 (TOST logic); otherwise the result is "inconclusive",
+  never "no effect".
+  **TrajectoryOnly 동등성**: "효과 없음" 주장은 사전 등록된 SESOI
+  ±0.02(정확도)를 요구한다 — 차이의 paired bootstrap 90% CI가 ±0.02
+  안에 완전히 들어올 때만 동등성을 선언하고, 아니면 "판단 불가"로
+  보고한다("효과 없음" 금지).
+- All Study 1 CIs and p-values are POST-SEARCH (288 configs explored on
+  the same data) and are reported as exploratory effect sizes only.
+  Study 1의 모든 CI·p값은 같은 자료에서 288설정을 탐색한 이후의 값이므로
+  탐색적 효과크기로만 보고한다.
+
+### 11.6 Mechanism and naming corrections / 기제·명칭 교정
+
+- **Rescue semantics**: the rescue counter accumulates UNRESOLVED
+  failures of a dimension (reset only by that dimension's next correct
+  outcome), not consecutive failures. Code and docs renamed accordingly
+  (`rescue_failure_threshold`, `_unresolved_failures`). This cumulative
+  semantics is the INTENDED design and is what all Study 1 results used.
+  **rescue 의미론**: rescue 카운터는 연속 실패가 아니라 해당 차원의
+  미해결 누적 실패(그 차원의 다음 정답으로만 초기화)를 센다. 코드·문서
+  명칭을 이에 맞게 교체(`rescue_failure_threshold`,
+  `_unresolved_failures`). 이 누적 의미론이 의도된 설계이며 Study 1의
+  모든 결과가 이 동작으로 산출되었다.
+- **OracleFull relabelled "oracle-assisted policy reference"**: it
+  remaps to the true rule only when its own policy triggers, so it is
+  NOT the theoretical ceiling (which is 1.0 by always answering the true
+  rule). All "ceiling" language is replaced; recovery fractions are
+  quoted against this reference, explicitly so.
+  **OracleFull을 "oracle-assisted policy reference"로 재명명**: 자기
+  정책이 발동할 때만 정답으로 remap하므로 이론적 상한(항상 정답 응답 =
+  1.0)이 아니다. "ceiling" 표현을 전부 교체하고, 회수율은 이 참조 기준
+  임을 명시해 인용한다.
+- **Parameter selection codified**: the constrained selection rule
+  (maximize pooled accuracy s.t. mean prev_rule_error ≤ 9 and the hard
+  budget of §11.2) is implemented in `analysis/param_search.py` itself,
+  which prints the constraint-filtered ranking and the selected row.
+  **파라미터 선정 코드화**: 제약 선정 규칙(합산 정확도 최대화, 단 평균
+  prev_rule_error ≤ 9 및 §11.2의 하드 예산)을 `analysis/param_search.py`
+  자체에 구현하고, 제약 필터링된 순위와 선택 행을 출력한다.
+
+### 11.7 Study 2 response parsing and retry rules (frozen)
+### 11.7 Study 2 응답 파싱·재시도 규칙 (동결)
+
+- Parsing: case-insensitive word-boundary match of dimension synonyms
+  (color/colour/hue; shape/form; number/count/quantity/numerosity/
+  amount — the archived study's variant table, reused verbatim). If
+  exactly one dimension is mentioned first, it is the parse; if multiple
+  tie at the same first position or none match, the parse is "" and
+  `ambiguous_response = 1`. "" always passes through controllers
+  unchanged.
+  파싱: 차원 동의어의 대소문자 무시 단어 경계 일치(보관 연구의 변형
+  표를 그대로 재사용). 최초 위치의 차원이 유일하면 그것이 파싱 결과;
+  동률이거나 없으면 ""이며 `ambiguous_response = 1`. ""는 항상
+  컨트롤러를 그대로 통과한다.
+- API errors: up to 3 retries with exponential backoff; a trial that
+  still fails is recorded as "" with an `api_error` flag.
+  API 오류: 지수 백오프로 최대 3회 재시도; 그래도 실패하면 ""로 기록하고
+  `api_error` 플래그를 남긴다.
+- Fable 5 refusals: retry once; if refused again, the repetition is
+  excluded and the exclusion counted (per §10.3).
+  Fable 5 refusal: 1회 재시도, 재차 refusal이면 repetition 제외 및 제외
+  수 보고(§10.3).
+
+### 11.8 Documentation and infrastructure / 문서·기반 정비
+
+- README corrected: ground truth is read by the evaluator AND the
+  oracle package (ceiling-reference exemption), not the evaluator alone.
+  README 교정: ground truth는 evaluator와 oracle 패키지(참조 조건 예외)
+  가 읽는다.
+- `ARCHIVED_STREAMS.md` records the archived streams' provenance:
+  claude-sonnet-4-6 and gpt-4o, temperature 1.0, single-turn, no
+  feedback, collected 2026-04 (verified against the original runners).
+  보관 스트림 출처 기록: claude-sonnet-4-6·gpt-4o, temperature 1.0,
+  단일 턴, 무피드백, 2026-04 수집(원 runner로 검증).
+- Manuscript-ID note: the withdrawn submission is referenced by the ID
+  on the submission PDF (COGSYS-S-26-00464); any differing Editorial
+  Manager display ID is recorded once confirmed from the EM screen.
+  원고 ID 주석: 철회 제출물은 제출 PDF상의 ID로 인용하며, Editorial
+  Manager 표시 ID가 다르면 EM 화면에서 확인되는 대로 기록한다.
+- `requirements.txt` (standard library only + Python version) and a
+  single `scripts/run_all_checks.py` gate (banned tokens + leak tests)
+  are added; the gate must pass before any result is reported.
+  requirements(표준 라이브러리 전용 + Python 버전)와 단일 검사 게이트
+  `scripts/run_all_checks.py`(금지어 + 누출 테스트)를 추가하고, 게이트
+  통과 없이는 어떤 결과도 보고하지 않는다.
+- The pilot (3–5 reps/model) is for cost/parser verification ONLY and is
+  excluded from confirmatory data. A FINAL freeze tag (after pilot,
+  fixing task, models, and N) precedes confirmatory generation.
+  파일럿(모델당 3–5 reps)은 비용·파서 확인 전용이며 확증 자료에서
+  제외한다. 파일럿 후 과제·모델·N까지 확정하는 최종 동결 태그를 거쳐야
+  확증 생성을 시작한다.

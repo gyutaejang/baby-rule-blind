@@ -59,8 +59,9 @@ class RuleBlindFullController(FeedbackAwareController):
         belief_confirm_streak: int = 2,
         value_gain: float = 0.30,
         value_loss: float = 0.30,
-        rescue_error_streak: int = 2,
+        rescue_failure_threshold: int = 2,
         rescue_cooldown: int = 6,
+        max_interventions_per_rep: int = 9,
     ) -> None:
         # v1 defaults were chosen by the documented exploratory search
         # (analysis/param_search.py, 288 configs on the archived streams)
@@ -97,13 +98,27 @@ class RuleBlindFullController(FeedbackAwareController):
         self.value_gain = value_gain
         self.value_loss = value_loss
 
-        # Stuckness rescue: consecutive failures of a dimension (as the
-        # frozen final choice) needed before that dimension's raw choices
-        # get remapped even outside a window. 0 disables the rescue path.
-        # 고착 구조: 어떤 차원이 (동결된 최종 선택으로서) 몇 번 연속
-        # 실패해야 window 밖에서도 그 차원의 원선택을 remap할지. 0이면
-        # rescue 경로 비활성화.
-        self.rescue_error_streak = rescue_error_streak
+        # Stuckness rescue: UNRESOLVED failures of a dimension (as the
+        # frozen final choice) accumulate and are reset ONLY by that
+        # dimension's next correct outcome — not by trials on other
+        # dimensions. This cumulative semantics is the intended design
+        # (Amendment B §11.6). Threshold 0 disables the rescue path.
+        # 고착 구조: 어떤 차원의 (동결된 최종 선택으로서의) '미해결' 실패가
+        # 누적되며, 그 차원의 다음 정답으로만 초기화된다 — 다른 차원의
+        # trial로는 초기화되지 않는다. 이 누적 의미론이 의도된 설계다
+        # (수정안 B 11.6절). 임계값 0이면 rescue 경로 비활성화.
+        self.rescue_failure_threshold = rescue_failure_threshold
+
+        # HARD per-repetition intervention budget (Amendment B §11.2):
+        # once this many interventions have been made, the controller
+        # passes everything through for the rest of the repetition. This
+        # enforces the supervisor regime as a constraint rather than a
+        # mean tendency.
+        # repetition당 하드 개입 예산 (수정안 B 11.2절): 이 횟수만큼
+        # 개입하면 남은 trial은 전부 통과시킨다. 감독자 체제를 평균
+        # 경향이 아닌 강제 제약으로 만든다.
+        self.max_interventions_per_rep = max_interventions_per_rep
+        self._interventions_made = 0
 
         # Minimum trials between rescue interventions. Without this the
         # rescue fires on every raw repetition of a discredited dimension
@@ -146,7 +161,7 @@ class RuleBlindFullController(FeedbackAwareController):
         # that dimension.
         # 동결된 최종 선택 기준의 차원별 연속 실패 카운터 (rescue 경로에
         # 공급). 해당 차원의 정답으로 초기화된다.
-        self._fail_streak = {rule: 0 for rule in RULES}
+        self._unresolved_failures = {rule: 0 for rule in RULES}
 
         # Remaining trials of the currently open veto window.
         # 현재 열린 veto window의 남은 trial 수.
@@ -175,6 +190,12 @@ class RuleBlindFullController(FeedbackAwareController):
             self._rescue_cooldown_remaining -= 1
         final_choice = raw_choice
 
+        # Hard budget gate (Amendment B §11.2): once exhausted, every
+        # remaining trial passes through untouched.
+        # 하드 예산 게이트 (수정안 B 11.2절): 소진 후 남은 trial은 전부
+        # 그대로 통과한다.
+        budget_left = self._interventions_made < self.max_interventions_per_rep
+
         # Intervene only while a window is open, and only against the
         # specific dimension that outcomes have discredited. Choices of
         # other dimensions pass through: the controller has no basis to
@@ -183,16 +204,18 @@ class RuleBlindFullController(FeedbackAwareController):
         # 대해서만 개입한다. 다른 차원의 선택은 통과시킨다 — 컨트롤러에게
         # 그것을 판단할 근거가 없기 때문이다.
         if (
-            self._window_remaining > 0
+            budget_left
+            and self._window_remaining > 0
             and raw_choice in RULES
             and raw_choice == self.discredited
         ):
             final_choice = self._best_alternative(excluding=raw_choice)
         elif (
-            self.rescue_error_streak > 0
+            budget_left
+            and self.rescue_failure_threshold > 0
             and self._rescue_cooldown_remaining == 0
             and raw_choice in RULES
-            and self._fail_streak[raw_choice] >= self.rescue_error_streak
+            and self._unresolved_failures[raw_choice] >= self.rescue_failure_threshold
         ):
             # Stuckness rescue (v1): this dimension has failed repeatedly
             # as a frozen choice, yet the LLM (which by design never sees
@@ -203,6 +226,9 @@ class RuleBlindFullController(FeedbackAwareController):
             # 무관하게 remap한다.
             final_choice = self._best_alternative(excluding=raw_choice)
             self._rescue_cooldown_remaining = self.rescue_cooldown
+
+        if final_choice != raw_choice:
+            self._interventions_made += 1
 
         if final_choice in RULES:
             self._last_tried[final_choice] = self._trial_number
@@ -275,7 +301,7 @@ class RuleBlindFullController(FeedbackAwareController):
 
         if correct:
             self.values[choice] = min(1.0, self.values[choice] + self.value_gain)
-            self._fail_streak[choice] = 0
+            self._unresolved_failures[choice] = 0
 
             # Extend or start the correct streak for this dimension.
             # 이 차원의 연속 정답을 잇거나 새로 시작한다.
@@ -300,7 +326,7 @@ class RuleBlindFullController(FeedbackAwareController):
             self.values[choice] = max(0.0, self.values[choice] - self.value_loss)
             self._correct_streak_choice = ""
             self._correct_streak = 0
-            self._fail_streak[choice] += 1
+            self._unresolved_failures[choice] += 1
 
             # Errors on the believed dimension are the change signal.
             # 신뢰 차원에서의 오류가 곧 변화 신호다.

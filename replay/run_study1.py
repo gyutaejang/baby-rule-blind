@@ -32,6 +32,7 @@ from controller import (  # noqa: E402
     PassthroughController,
     RuleBlindFullController,
     TrajectoryOnlyController,
+    WSLSController,
 )
 from controller.yoked_random import YokedRandomController  # noqa: E402
 from evaluator import Evaluator  # noqa: E402
@@ -90,6 +91,16 @@ def main() -> None:
                         evaluator,
                     ),
                 ),
+                # Information-matched baselines (Amendment B §11.2):
+                # same per-trial outcome information as Full.
+                # 정보량 동일 기준선 (수정안 B 11.2절): Full과 동일한
+                # trial별 정오 정보를 받는다.
+                ("WSLSBudgeted", run_replay(WSLSController(max_interventions_per_rep=9), stream, evaluator)),
+                ("WSLSUnlimited", run_replay(WSLSController(max_interventions_per_rep=None), stream, evaluator)),
+                # Oracle-assisted policy reference (NOT a ceiling — the
+                # theoretical ceiling is 1.0; Amendment B §11.6).
+                # oracle 보조 정책 참조 (상한선이 아님 — 이론적 상한은
+                # 1.0; 수정안 B 11.6절).
                 ("OracleFull", run_replay(OracleFullController(GROUND_TRUTH), stream, evaluator)),
             ]
 
@@ -104,11 +115,13 @@ def main() -> None:
                             "rep": rep,
                             "condition": condition,
                             "trial_number": r.trial_number,
+                            "block": r.block,
+                            "rule_shift": int(r.rule_shift),
                             "raw_choice": r.raw_choice,
                             "final_choice": r.final_choice,
                             "intervened": int(r.intervened),
                             "correct": int(r.correct),
-                            "persistence_error": int(r.persistence_error),
+                            "prev_rule_error": int(r.prev_rule_error),
                         }
                     )
 
@@ -121,9 +134,19 @@ def main() -> None:
             "condition",
             "n_trials",
             "total_accuracy",
-            "persistence_error_count",
+            "prev_rule_error_count",
+            "old_rule_reentry_count",
+            "choice_entropy",
+            "unparsable_count",
+            "recovery_latency_mean",
+            "latency_censored_count",
             "intervention_count",
-            "productive_rate",
+            "intervention_coverage",
+            "corrective_override_count",
+            "harmful_override_count",
+            "net_correction",
+            "intervention_precision",
+            "subsequent_success_rate",
         ],
     )
     write_rows(
@@ -134,24 +157,37 @@ def main() -> None:
             "rep",
             "condition",
             "trial_number",
+            "block",
+            "rule_shift",
             "raw_choice",
             "final_choice",
             "intervened",
             "correct",
-            "persistence_error",
+            "prev_rule_error",
         ],
     )
 
     # Console overview: per-condition means per model.
     # 콘솔 개요: 모델별·조건별 평균.
-    print("model    condition       acc     persist  interv")
+    conditions_order = (
+        "RawLLM", "RuleBlindFull", "NoVeto", "TrajectoryOnly",
+        "YokedRandom", "WSLSBudgeted", "WSLSUnlimited", "OracleFull",
+    )
+    print("model    condition       acc     prevrule interv  corr/harm  precision")
     for model in MODELS:
-        for condition in ("RawLLM", "RuleBlindFull", "NoVeto", "TrajectoryOnly", "YokedRandom", "OracleFull"):
+        for condition in conditions_order:
             rows = [r for r in summary_rows if r["model"] == model and r["condition"] == condition]
             acc = sum(r["total_accuracy"] for r in rows) / len(rows)
-            per = sum(r["persistence_error_count"] for r in rows) / len(rows)
+            per = sum(r["prev_rule_error_count"] for r in rows) / len(rows)
             itv = sum(r["intervention_count"] for r in rows) / len(rows)
-            print(f"{model:<8} {condition:<15} {acc:.4f}  {per:6.2f}  {itv:6.2f}")
+            cor = sum(r["corrective_override_count"] for r in rows)
+            hrm = sum(r["harmful_override_count"] for r in rows)
+            prec = [r["intervention_precision"] for r in rows if r["intervention_precision"] >= 0]
+            prec_m = sum(prec) / len(prec) if prec else float("nan")
+            print(
+                f"{model:<8} {condition:<15} {acc:.4f}  {per:6.2f}  {itv:6.2f}  "
+                f"{cor:4.0f}/{hrm:<4.0f}  {prec_m:.3f}"
+            )
 
     print(f"\nsummary: {RESULTS_DIR / 'study1_summary.csv'} ({len(summary_rows)} rows)")
     print(f"trials:  {RESULTS_DIR / 'study1_trials.csv'} ({len(trial_rows)} rows)")

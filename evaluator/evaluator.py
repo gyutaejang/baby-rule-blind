@@ -35,17 +35,35 @@ class GroundTruthTrial:
 @dataclass(frozen=True)
 class ScoreResult:
     """Outcome of scoring one frozen final choice.
-    동결된 최종 선택 하나를 채점한 결과."""
+    동결된 최종 선택 하나를 채점한 결과.
+
+    NOTE: everything here flows to the analysis records only — never back
+    to a controller. The only value that crosses to controllers is the
+    single boolean `correct`, delivered by the harness after freezing.
+    참고: 이 정보는 전부 분석 기록으로만 흐르며 컨트롤러로는 가지 않는다.
+    컨트롤러로 건너가는 값은 harness가 동결 후 전달하는 단일 boolean
+    `correct`뿐이다.
+    """
 
     trial_number: int
     final_choice: str
     correct: bool
 
-    # Final choice equals the previous block's rule while being wrong —
-    # the perseveration signature this study targets.
-    # 최종 선택이 이전 블록의 규칙과 같으면서 오답 — 본 연구가 겨냥하는
-    # 고착의 흔적.
-    persistence_error: bool
+    # Final choice equals the previous block's rule while being wrong.
+    # Amendment B terminology: this is a PREVIOUS-RULE-ALIGNED error, not
+    # cognitive perseveration — the LLM is memoryless, so alignment with
+    # the previous rule largely reflects stable output preferences.
+    # 최종 선택이 이전 블록 규칙과 같으면서 오답. 수정안 B 용어: 이는
+    # 인지적 고착이 아니라 '이전 규칙 정렬 오류'다 — LLM이 무기억이므로
+    # 이전 규칙과의 정렬은 대체로 안정적 출력 선호를 반영한다.
+    prev_rule_error: bool
+
+    # Analysis-side schedule context (block index, whether this trial is
+    # the first of a new rule) for reentry/latency metrics.
+    # reentry·latency 지표 계산을 위한 분석 측 일정 정보(블록 번호, 새
+    # 규칙의 첫 trial 여부).
+    block: int
+    rule_shift: bool
 
 
 class Evaluator:
@@ -81,7 +99,7 @@ class Evaluator:
         """
         gt = self._trials[trial_number]
         correct = final_choice == gt.hidden_rule
-        persistence_error = (
+        prev_rule_error = (
             not correct
             and gt.previous_hidden_rule != gt.hidden_rule
             and final_choice == gt.previous_hidden_rule
@@ -90,5 +108,7 @@ class Evaluator:
             trial_number=trial_number,
             final_choice=final_choice,
             correct=correct,
-            persistence_error=persistence_error,
+            prev_rule_error=prev_rule_error,
+            block=gt.block,
+            rule_shift=gt.rule_shift,
         )

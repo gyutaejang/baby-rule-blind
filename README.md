@@ -1,15 +1,20 @@
 # baby-rule-blind
 
-Corrected redesign of the withdrawn Baby40 study (COGSYS-S-26-00464):
-an external **rule-blind** controller for a frozen LLM in WCST-style
-rule-shift tasks, with strict information isolation between the
-controller (public information only) and the evaluator (sole owner of
-ground truth).
+Corrected redesign of the withdrawn Baby40 study (submission-PDF ID
+COGSYS-S-26-00464; see ARCHIVED_STREAMS.md for the manuscript-ID note):
+a **sparse outcome-feedback supervisor for memoryless LLM outputs** in
+WCST-style rule-shift tasks, with strict information isolation. Ground
+truth is readable by exactly two components: the evaluator (scoring) and
+the `oracle/` package (the oracle-assisted policy reference condition,
+explicitly exempt). Rule-blind controllers in `controller/` can read
+neither.
 
-철회된 Baby40 연구(COGSYS-S-26-00464)의 교정 재설계: WCST형 규칙 전환
-과제에서 고정된 LLM에 대한 외부 **rule-blind** 컨트롤러. 컨트롤러(공개
-정보만 접근)와 평가기(ground truth 단독 보유) 사이의 엄격한 정보 격리를
-전제로 한다.
+철회된 Baby40 연구(제출 PDF ID COGSYS-S-26-00464; 원고 ID 주석은
+ARCHIVED_STREAMS.md 참조)의 교정 재설계: WCST형 규칙 전환 과제에서
+**무기억 LLM 출력에 대한 희소 outcome-feedback supervisor**. 엄격한 정보
+격리를 전제로 하며, ground truth를 읽을 수 있는 구성요소는 정확히 둘 —
+평가기(채점)와 `oracle/` 패키지(명시적 예외인 oracle 보조 정책 참조
+조건)다. `controller/`의 rule-blind 컨트롤러들은 어느 쪽도 읽을 수 없다.
 
 ## Key documents / 핵심 문서
 
