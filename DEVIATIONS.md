@@ -11,4 +11,4 @@ study followed the plan exactly.
 
 | Date / 날짜 | Change / 변경 내용 | Reason / 사유 |
 |---|---|---|
-| (none yet / 아직 없음) | | |
+| 2026-07-15 | Amendment A (v1.1, §10): reframed as out-of-model transfer; Study 2 models = Claude Fable 5 / Opus 4.8 / Sonnet 5 + OpenAI flagship & mid tier (Haiku excluded); per-model generation configs (thinking off where possible, minimized on Fable 5); pre-registered headroom gate (RawLLM mean persistence ≥ 3.0), non-inferiority margin (−0.02), safety metrics, same-task rule, external freeze timestamping, development-contact ledger. / 수정안 A: 모델 외부 전이로 재구성, 모델·설정·게이트·마진 사전 등록. | Adopted BEFORE study2-freeze and before any Study 2 data existed — a pre-freeze design amendment, not a post-hoc change. Old models are being deprecated; transfer to current generations is both necessary and the stronger claim. / study2-freeze 및 Study 2 데이터 생성 이전의 사전 수정안. 구모델 지원 종료 대응이자 더 강한 주장으로의 전환. |

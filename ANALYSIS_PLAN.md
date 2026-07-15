@@ -1,10 +1,11 @@
 # Rule-Blind Controller Study — Frozen Analysis Plan
 # Rule-Blind 컨트롤러 연구 — 동결된 분석계획
 
-**Version / 버전**: 1.0
+**Version / 버전**: 1.1 (Amendment A appended 2026-07-15; original v1.0 text unchanged)
 **Date frozen / 동결일**: 2026-07-15
 **Status / 상태**: FROZEN before any new controller code is written or executed.
-새 컨트롤러 코드를 작성·실행하기 전에 동결됨.
+새 컨트롤러 코드를 작성·실행하기 전에 동결됨. v1.1은 Study 2 스트림 생성
+전의 수정안(Amendment A, §10)이며, v1.0 본문은 수정하지 않고 보존한다.
 
 > Any deviation from this plan after this commit MUST be recorded in
 > `DEVIATIONS.md` with the date, the change, and the reason.
@@ -361,3 +362,157 @@ interim analysis; no optional stopping.
   never used as evidence for the main hypotheses.
   Oracle-Full은 부록의 상한선 참조로만 제시하며 주 가설의 근거로 사용하지
   않는다.
+
+---
+
+## 10. Amendment A (v1.1, 2026-07-15) — Out-of-model transfer design
+## 10. 수정안 A (v1.1, 2026-07-15) — 모델 외부 전이 설계
+
+Adopted BEFORE any Study 2 stream generation and before the study2-freeze
+tag. Where this amendment conflicts with §1–§9, this amendment governs.
+Study 2 스트림 생성 및 study2-freeze 태그 이전에 채택됨. §1–§9와 상충하는
+부분은 본 수정안이 우선한다.
+
+### 10.1 Reframed research question / 연구 질문 재정의
+
+> Can a rule-blind correction policy, developed exclusively on archived
+> response streams from an earlier model generation and then frozen,
+> transfer without retuning to newer model generations?
+> 이전 세대 모델의 보관 응답 스트림만으로 개발한 뒤 동결한 rule-blind
+> 교정 정책이, 재조정 없이 최신 세대 모델에 전이되는가?
+
+- Study 1 (§4) is relabelled **controller development** (exploratory):
+  archived Claude/GPT-4o streams are the development set. No confirmatory
+  language may be attached to Study 1 results.
+  Study 1은 **컨트롤러 개발**(탐색적)로 재규정한다: 보관된 Claude/GPT-4o
+  스트림이 개발 데이터다. Study 1 결과에 확증적 표현을 붙이지 않는다.
+- Study 2 is a **frozen out-of-model validation**: the controller code,
+  all parameters, condition roles, metrics, statistics code, and
+  exclusion/retry rules are frozen (git tag `study2-freeze`, externally
+  timestamped per §10.6) before any new-model stream is generated, and
+  nothing is retuned after seeing new-model data.
+  Study 2는 **동결된 모델 외부 검증**이다: 컨트롤러 코드, 전체 파라미터,
+  조건 역할, 지표, 통계 코드, 제외·재시도 규칙을 새 모델 스트림 생성 전에
+  동결하고(git 태그 `study2-freeze`, §10.6의 외부 타임스탬프), 새 모델
+  데이터를 본 후에는 아무것도 재조정하지 않는다.
+
+### 10.2 Study 2 models / Study 2 모델 구성
+
+Two families × two-to-three capability tiers, giving a generation axis
+AND a capability axis (headroom varies with tier).
+두 모델군 × 2–3개 능력 티어 — 세대 축과 능력 축(티어에 따라 headroom이
+달라짐)을 동시에 확보한다.
+
+| Family | Tier | Model (pin exact ID at generation time) |
+|---|---|---|
+| Anthropic | Frontier | Claude Fable 5 (`claude-fable-5`) |
+| Anthropic | Flagship | Claude Opus 4.8 (`claude-opus-4-8`) |
+| Anthropic | Mid | Claude Sonnet 5 (`claude-sonnet-5`) |
+| OpenAI | Flagship | current flagship at generation time / 생성 시점의 플래그십 |
+| OpenAI | Mid | current mid tier at generation time / 생성 시점의 중위 티어 |
+
+Haiku-tier models are excluded by decision of 2026-07-15. Exact model ID
+strings, API versions, and generation timestamps are recorded in the
+data manifest at generation time; OpenAI IDs are resolved from the live
+model list on the day of generation and pinned there.
+Haiku급 모델은 2026-07-15 결정으로 제외한다. 정확한 모델 ID 문자열, API
+버전, 생성 시각은 생성 시점에 데이터 manifest에 기록한다. OpenAI ID는
+생성 당일 라이브 모델 목록에서 확인해 그 시점에 고정한다.
+
+### 10.3 Generation configuration / 스트림 생성 설정
+
+Principle: reasoning/thinking is disabled wherever the API allows, and
+minimized where it cannot be disabled. Per-model configs are fixed here
+and recorded in the manifest.
+원칙: 추론(thinking)은 API가 허용하는 한 비활성화하고, 비활성화가 불가능한
+모델에서는 최소화한다. 모델별 설정은 여기서 고정하고 manifest에 기록한다.
+
+| Model | Thinking / reasoning | Other |
+|---|---|---|
+| Claude Opus 4.8 | Omit `thinking` (runs without thinking by default) / `thinking` 생략(기본 비활성) | No sampling params (API rejects them) / 샘플링 파라미터 없음(API가 거부) |
+| Claude Sonnet 5 | Explicit `thinking: {type: "disabled"}` (omitting runs adaptive) / 명시적 비활성(생략 시 adaptive가 기본) | No non-default sampling params / 비기본 샘플링 파라미터 없음 |
+| Claude Fable 5 | CANNOT be disabled (400). Omit `thinking`; set `output_config.effort: "low"` to minimize; give `max_tokens` headroom (~2000) since thinking tokens count toward it / 비활성화 불가(400). `thinking` 생략, `effort: "low"`로 최소화, thinking 토큰이 포함되므로 `max_tokens` 여유(~2000) 확보 | Handle `stop_reason: "refusal"` as a retry-once-then-exclude rule, with exclusions counted and reported / refusal은 1회 재시도 후 제외, 제외 수 보고 |
+| OpenAI models | Reasoning minimized via the lowest available reasoning-effort setting if the pinned model is a reasoning model; otherwise n/a / 고정된 모델이 추론 모델이면 최저 추론 설정, 아니면 해당 없음 | Provider-default sampling, temperature left at provider default, recorded / 공급자 기본 샘플링, 기록 |
+
+NOTE (documented asymmetry): Fable 5 generates with internal reasoning
+that other models do not have. The structural guarantee is unaffected —
+no model receives feedback or rule information in the prompt, so no
+model can identify rule shifts regardless of reasoning. Whether internal
+reasoning changes raw-stream characteristics (choice entropy, repeat
+rate) is itself a reported descriptive result.
+명시된 비대칭: Fable 5는 다른 모델에 없는 내부 추론과 함께 생성된다.
+구조적 보장에는 영향이 없다 — 어떤 모델도 프롬프트에서 피드백이나 규칙
+정보를 받지 않으므로, 추론 여부와 무관하게 규칙 전환을 알 수 없다. 내부
+추론이 원 스트림의 특성(선택 엔트로피, 반복률)을 바꾸는지는 그 자체로
+보고할 기술적 결과다.
+
+### 10.4 Headroom stratification (pre-registered) / Headroom 층화 (사전 등록)
+
+Newer models may exhibit little perseveration, conflating "controller
+failed" with "nothing to fix". Therefore:
+최신 모델은 고착이 드물어 "교정 실패"와 "고칠 것이 없음"이 섞일 수 있다.
+따라서:
+
+1. **Pathology prevalence metrics** computed on each model's RawLLM
+   streams before any controller condition is analysed: mean persistence
+   errors, mean maximum within-stream choice-repeat proportion, choice
+   entropy.
+   컨트롤러 조건 분석 전에 각 모델의 RawLLM 스트림에서 병리 유병률 지표를
+   계산한다: 평균 persistence error, 스트림 내 최다 선택 반복 비율 평균,
+   선택 엔트로피.
+2. **Confirmatory gate**: H1/H2 are tested confirmatorily for a model
+   only if that model's RawLLM mean persistence-error count ≥ 3.0.
+   Models below the gate are reported descriptively with the label
+   "insufficient intervention headroom", plus the non-inferiority test
+   of §10.5. The gate value is frozen here, before any Study 2 data.
+   **확증 게이트**: 어떤 모델에서 RawLLM 평균 persistence error가 3.0
+   이상일 때만 그 모델에서 H1/H2를 확증적으로 검정한다. 게이트 미달
+   모델은 "개입 여지 부족"으로 기술 보고하고 §10.5의 비열등성 검정만
+   수행한다. 게이트 값은 Study 2 데이터 이전인 지금 동결한다.
+3. **Same task regardless of headroom**: the primary confirmatory
+   analysis uses the identical 36-trial WCST for every model. A
+   harder-task variant, if any, is a separate secondary experiment whose
+   design must itself be frozen before it runs; it never replaces the
+   primary analysis.
+   **headroom과 무관하게 동일 과제**: 주 확증 분석은 모든 모델에서 동일한
+   36-trial WCST를 사용한다. 난이도를 올린 변형은 별도의 2차 실험로만
+   수행하며 그 설계도 실행 전에 동결한다. 주 분석을 대체할 수 없다.
+
+### 10.5 Safety metrics and non-inferiority / 안전성 지표와 비열등성
+
+Computed for every model, gate or no gate / 게이트와 무관하게 전 모델에서 계산:
+
+- **Override precision** = interventions where the raw choice was
+  actually incorrect / total interventions.
+  개입 중 원선택이 실제 오답이었던 비율.
+- **Harmful override rate** = trials where the raw choice was correct
+  and the intervention made the final choice incorrect, / total trials.
+  원선택이 정답인데 개입이 최종 선택을 오답으로 만든 trial의 비율.
+- **Intervention coverage** = interventions / trials.
+  trial 대비 개입 비율.
+- **Non-inferiority (do-no-harm)**: RuleBlindFull is declared
+  non-inferior to RawLLM on a model iff the paired-bootstrap 95% CI
+  lower bound of the within-pair accuracy difference (Full − RawLLM) is
+  greater than **−0.02**. The margin is frozen here.
+  **비열등성(무해성)**: 짝 내 정확도 차이(Full − RawLLM)의 paired
+  bootstrap 95% CI 하한이 **−0.02**보다 클 때에만 해당 모델에서
+  비열등하다고 선언한다. 마진은 지금 동결한다.
+
+### 10.6 Freeze verification / 동결의 외부 검증
+
+The `study2-freeze` commit is pushed to a public repository (or its
+commit hash registered on OSF) BEFORE Study 2 generation begins, making
+the freeze externally timestamped and verifiable.
+`study2-freeze` 커밋은 Study 2 생성 시작 전에 공개 저장소로 push(또는
+커밋 해시를 OSF에 등록)하여 동결 시점을 외부에서 검증 가능하게 만든다.
+
+### 10.7 Development-contact ledger / 개발 접촉 이력
+
+The paper reports, in a table, which data touched development:
+논문에 어떤 데이터가 개발에 닿았는지 표로 보고한다:
+
+| Data | Role | Touched parameter selection? |
+|---|---|---|
+| Archived Claude 30 streams (2026-04) | development / 개발 | YES |
+| Archived GPT-4o 30 streams (2026-04) | development / 개발 | YES |
+| All Study 2 new-model streams | held-out confirmatory / 확증 | NO — first contact after study2-freeze / 동결 후 최초 접촉 |
