@@ -226,15 +226,18 @@ Per-model generation config / 모델별 생성 설정:
   전체 제외는 민감도 분석 전용. 실패 로그·attempt ID는 모두 보존하고,
   대체 repetition을 만들더라도 원 실패 기록을 남긴다.
 
-**Parsing (frozen, v2)** / 파싱(동결, 2판): case-insensitive
+**Parsing (frozen, v3)** / 파싱(동결, 3판): case-insensitive
 word-boundary matching of dimension synonyms (the archived study's table
 verbatim). If a final-answer marker occurs ("final choice", "final
 answer", "my choice is", "I choose", "sort by", "answer:", … — the
-frozen list in `study2/parser.py`), only the text AFTER THE LAST marker
+frozen literal list in `study2/parser.py` — or one of the frozen v3
+regex marker patterns covering "I'll sort this card by", "Sorting by",
+"I'll choose"-type phrasings), only the text AFTER THE LAST marker
 is parsed (earliest dimension there); with no marker, a UNIQUE dimension
 anywhere wins and zero or multiple dimensions → "" with
 `ambiguous_response = 1`. "" always passes through supervisors. The
-parser is fixture-tested in the gate.
+parser is fixture-tested in the gate. v3 was adopted through the §10.4
+re-freeze cycle after the 2026-07-15 pilot (see `DEVIATIONS.md`).
 차원 동의어의 단어 경계 일치(보관 표 그대로). 최종 답변 marker("final
 choice" 등, `study2/parser.py`의 동결 목록)가 있으면 '마지막' marker
 이후만 파싱(그 구간 최초 차원); marker가 없으면 유일 차원 채택, 0개
@@ -245,6 +248,11 @@ fixture로 검증된다.
 order, and card attributes are materialized by
 `scripts/generate_stimuli.py` into `data/stimuli_study2/` (hash
 manifest; system message = none) and committed BEFORE any API call. The
+prompt is the archived study's template plus one answer-format line
+("Answer with just the dimension name."), added identically for all
+models as a documented deviation after the 2026-07-15 pilot (see
+`DEVIATIONS.md`); cross-generation comparability with the archived
+streams is qualified accordingly. The
 runner reads ONLY these stimulus files — the request path never loads
 any ground-truth/schedule file (two-stage blindness, enforced by the
 dry-run gate). All models receive identical prompts at the same rep.

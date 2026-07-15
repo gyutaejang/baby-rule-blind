@@ -1,0 +1,221 @@
+trial_number,prompt,raw_response,parsed_choice,ambiguous_response,api_error,refusal
+1,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 3 circle(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should mention—without knowing the sorting rule or categories you'd like me to sort into, I'm picking arbitrarily. If you have",color,0,0,0
+2,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 square(s).
+Your choice:","I don't have enough context to give you a meaningful answer here. Sorting by a single dimension only makes sense relative to a rule or a set of other cards.
+
+A few questions:
+
+- **Is there a target/mat",,1,0,0
+3,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 triangle(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should note—without knowing the sorting rule or seeing the target categories/piles, any dimension is an equally valid choice. If you have a",color,0,0,0
+4,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 triangle(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should note—without knowing the sorting rule or seeing other cards/categories, this is an arbitrary pick. If you have a target rule",color,0,0,0
+5,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 4 square(s).
+Your choice:","I'll choose **color: green**.
+
+(Though I should mention—since any of the three dimensions would be a valid way to sort this card, I picked color somewhat arbitrarily. If you're following a specific s",color,0,0,0
+6,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 4 star(s).
+Your choice:","I'll sort by **color**: yellow.
+
+(Though I should mention—if you have a specific sorting rule or context in mind, like matching to particular piles or following a pattern, let me know and I can choose more",color,0,0,0
+7,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 2 star(s).
+Your choice:","I'll sort by **color**: blue.
+
+(Though I should note—without knowing the sorting rule or seeing other cards/piles, any single dimension is an equally valid choice. If you have a target category or fe",color,0,0,0
+8,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 4 triangle(s).
+Your choice:","I don't have enough context to make a meaningful choice here. To sort cards effectively, I'd need to know:
+
+- **What I'm sorting against** — Are there other cards or existing piles? What dimension are",,1,0,0
+9,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 1 star(s).
+Your choice:","I'll sort by **color**: green.
+
+(Though I should mention—since this card has only one star and the number ""1,"" any of the three dimensions would work equally well as a sorting criterion. If you have a specific rule",color,0,0,0
+10,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 triangle(s).
+Your choice:","I don't have enough context to give you a meaningful answer here. This looks like it might be from a card-sorting task (similar to the Wisconsin Card Sorting Test), where the ""correct"" sorting d",,1,0,0
+11,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 3 square(s).
+Your choice:","I'll sort by **color: yellow**.
+
+(Though I should note—without knowing the sorting rules or categories you're using, I'm picking a dimension somewhat arbitrarily. If you have a spec",color,0,0,0
+12,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 1 circle(s).
+Your choice:","I'll choose to sort by **color**: green.
+
+(Though I should note—without knowing the sorting rule you're using or seeing the target categories, any single dimension is an arbitrary pick. If you have a",color,0,0,0
+13,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 triangle(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should note—without knowing the sorting rule or seeing other cards/categories, any single dimension is an arbitrary pick. If you have",color,0,0,0
+14,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 triangle(s).
+Your choice:","I'll choose to sort by **color**.
+
+This card would go in the **red** pile.
+
+(Though I'm happy to sort by shape—triangle—or number—1—instead, if you'd prefer a different d",shape,0,0,0
+15,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 4 triangle(s).
+Your choice:","I'll choose to sort by **color**.
+
+This card would go in the **green** pile.
+
+(Though I should note—I don't have context about any previous sorting rule or feedback, so I'm making an arbitrary",color,0,0,0
+16,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 3 square(s).
+Your choice:","I'll choose to sort by **color**: blue.
+
+(That said, I'm happy to sort by shape (square) or number (3) instead—just let me know if you have a specific sorting rule or target category in mind",shape,0,0,0
+17,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 3 star(s).
+Your choice:","I'll sort by **color**: blue.
+
+(Though I should note—if you have a specific sorting rule in mind, or a stack of cards you're comparing this one against, let me know and I can pick the dimension",color,0,0,0
+18,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 square(s).
+Your choice:","I don't have enough context to make a meaningful sorting decision. To choose the right dimension, I'd typically need to know things like:
+
+- **A rule or pattern** I'm supposed to match (e.g.,",,1,0,0
+19,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 2 triangle(s).
+Your choice:","I'll sort by **color**: yellow.
+
+(Though I'm happy to sort by shape or number instead—just let me know which dimension you'd prefer, or if there's a rule you'd like me to follow",shape,0,0,0
+20,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 circle(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should mention—I don't have any prior context about sorting rules or feedback from previous cards, so I'm picking one dimension arbitr",color,0,0,0
+21,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 3 circle(s).
+Your choice:","I'll choose to sort by **color**: red.
+
+(Though I should mention—since I don't have context about a matching rule or target category, I'm making an arbitrary choice here. If you're playing something like the W",color,0,0,0
+22,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 3 circle(s).
+Your choice:","I'll choose to sort by **color**.
+
+This card would go in the **red** pile.
+
+(Though I should mention: without knowing the sorting rule or seeing other cards/feedback, any dimension—color,",color,0,0,0
+23,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 triangle(s).
+Your choice:","I'll choose to sort by **color: yellow**.
+
+(Though I'm happy to sort by shape (triangle) or number (1) instead—just let me know if you have a specific sorting rule or category in m",shape,0,0,0
+24,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 4 star(s).
+Your choice:","I'll sort by **color: yellow**.
+
+That said, I should mention—I'm an AI without any prior context about a sorting rule you might be using (like in the Wisconsin Card Sorting Test).",color,0,0,0
+25,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 2 star(s).
+Your choice:","I'll sort by **color**: yellow.
+
+(Though I should note—since this appears to be a card-sorting task where there's typically a hidden rule I'm meant to discover through feedback, I'm making an",color,0,0,0
+26,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 star(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I should mention—if there's a specific sorting rule or target category you're working with, let me know and I can help you sort more purposefully! Without addit",color,0,0,0
+27,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 2 star(s).
+Your choice:","I'll sort by **color**: yellow.
+
+(Though I should note—if there's a specific sorting rule or target category you're working toward, I'd be happy to help with that instead. Any of the three dimensions",color,0,0,0
+28,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 4 star(s).
+Your choice:","I'll choose to sort by **color**: blue.
+
+(Though I should mention—since this card has all three dimensions, I'm happy to sort by shape (star) or number (4) instead if you have a particular s",shape,0,0,0
+29,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 triangle(s).
+Your choice:","I don't have enough context to make a meaningful choice here. To sort cards by a single dimension, I'd typically need to know:
+
+- **What I'm sorting toward** — Is there a target pile, a rule",,1,0,0
+30,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 star(s).
+Your choice:","I'll choose **color**: blue.
+
+(Though I should mention—if you have a specific sorting rule or a matching card you'd like me to align with, let me know! Without additional context about the sorting goal, """,color,0,0,0
+31,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 3 star(s).
+Your choice:","I'll choose to sort by **color**: yellow.
+
+(Though I'm happy to sort by shape (star) or number (3) instead—just let me know which dimension you'd prefer, or if there's a mat",shape,0,0,0
+32,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 star(s).
+Your choice:","I'll choose **color** (green) as my sorting dimension.
+
+That said, I want to be transparent: without knowing the specific sorting rule or context you're using, any of the three dimensions (color, shape,",,1,0,0
+33,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 1 star(s).
+Your choice:","I'll sort by **color**: green.
+
+(Though I should note—any of the three dimensions would be a valid choice here. If you have a specific sorting rule in mind, such as matching a reference card or following a partic",color,0,0,0
+34,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 triangle(s).
+Your choice:","I don't have enough context to give you a definitive answer, since sorting tasks like this usually depend on a rule you're supposed to discover through feedback (common in tasks like the Wisconsin Card S",,1,0,0
+35,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 square(s).
+Your choice:","I'll sort by **color: red**.
+
+(Though I should mention—since any of the three dimensions would be a valid choice here, if you're following a specific sorting rule or matching against a target card, let me know and I",color,0,0,0
+36,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 square(s).
+Your choice:","I'll choose to sort by **color**: blue.
+
+(Though I should mention—I don't have any prior context about which sorting rule applies or what other cards exist, so this is just an arbitrary pick. If",color,0,0,0

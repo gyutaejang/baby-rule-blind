@@ -1,5 +1,5 @@
-"""Frozen response parser for Study 2 (plan v2.0 §5), version 2.
-Study 2용 동결된 응답 파서 (계획 v2.0 5절), 2판.
+"""Frozen response parser for Study 2 (plan v2.0 §5), version 3.
+Study 2용 동결된 응답 파서 (계획 v2.0 5절), 3판.
 
 v2 change (pre-pilot-freeze review): earliest-position-only parsing
 misreads deliberative long answers ("I considered color, but my final
@@ -9,6 +9,21 @@ final-answer marker.
 v2 변경(파일럿 동결 전 검토 반영): 최초 위치 규칙만으로는 숙고형 장문
 응답을 오분류한다("I considered color, but my final choice is shape" ->
 color). v2는 명시적 최종 답변 표시를 우선한다.
+
+v3 change (documented deviation, pilot 2026-07-15): the v2 marker list
+missed the phrasings the pilot models actually used ("I'll sort this
+card by **color**", "Sorting by color", "I'll choose color"), producing
+unparsable rates above the frozen 10% tolerance on the Anthropic family.
+v3 adds regex marker PATTERNS alongside the literal marker list; the
+last-marker rule and all other rules are unchanged. Adopted via the
+re-freeze cycle of plan §10.4, never in place.
+
+v3 변경(문서화된 deviation, 2026-07-15 파일럿): v2 marker 목록이 실제
+모델들의 표현("I'll sort this card by **color**", "Sorting by color",
+"I'll choose color")을 놓쳐 Anthropic 계열의 파싱 불가율이 동결 허용치
+10%를 초과했다. v3는 리터럴 marker 목록에 정규식 marker PATTERN을
+추가한다; 마지막-marker 규칙 등 나머지 규칙은 동일하다. 계획 10.4절의
+재동결 사이클로 채택했으며 즉석 수정이 아니다.
 
 Frozen rules / 동결 규칙:
 1. Case-insensitive word-boundary matching of dimension synonyms (the
@@ -59,6 +74,17 @@ FINAL_ANSWER_MARKERS: Tuple[str, ...] = (
     "choice:",
 )
 
+# v3: regex marker patterns for phrasings the literal list cannot cover
+# with word-level variation ("I'll sort this card by", "Sorting by",
+# "I'd go with"). Frozen alongside the literal list.
+# v3: 단어 변형 때문에 리터럴 목록으로 못 잡는 표현용 정규식 marker
+# ("I'll sort this card by", "Sorting by", "I'd go with"). 리터럴 목록과
+# 함께 동결.
+FINAL_ANSWER_MARKER_PATTERNS: Tuple[str, ...] = (
+    r"\bi(?:'ll| will| would|'d)? (?:choose|pick|select|go with)\b",
+    r"\bsort(?:ing|ed)? (?:this |the |that )?(?:card(?:s)? )?by\b",
+)
+
 
 def _dimension_positions(text: str) -> Dict[str, int]:
     """Earliest match position per dimension. / 차원별 최초 일치 위치."""
@@ -87,6 +113,9 @@ def parse_dimension_choice(response: str) -> Tuple[str, int]:
         idx = text.rfind(marker)
         if idx >= 0:
             last_marker_end = max(last_marker_end, idx + len(marker))
+    for pattern in FINAL_ANSWER_MARKER_PATTERNS:
+        for m in re.finditer(pattern, text):
+            last_marker_end = max(last_marker_end, m.end())
     if last_marker_end >= 0:
         after = text[last_marker_end:]
         positions = _dimension_positions(after)

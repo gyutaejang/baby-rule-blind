@@ -27,6 +27,22 @@ These streams never serve as confirmatory evidence.
 전용** — 컨트롤러 설계, 파라미터 탐색, Study 1 분석 전부. 확증 근거로는
 절대 사용하지 않는다.
 
+## Archived Study 2 pilot v1 / 보관된 Study 2 파일럿 1차
+
+`data/public_study2_pilot_parserv2/` holds the 2026-07-15 engineering
+pilot generated under parser v2 and the pre-deviation stimulus template
+(4 models × 3 reps × 36 trials; generation manifests included). It
+triggered the parser-v3 + answer-format-line deviation (see
+`DEVIATIONS.md`) and is **excluded from confirmatory data, parameter
+selection, and all analyses** — kept only as the failure record required
+by plan §5/§10.
+
+`data/public_study2_pilot_parserv2/`는 파서 v2·기존 자극 템플릿으로 생성된
+2026-07-15 공학 파일럿이다(4모델 × 3 reps × 36 trials, 생성 manifest 포함).
+파서 v3 + 답변 형식 한 줄 deviation의 근거가 된 기록이며(`DEVIATIONS.md`),
+확증 자료·파라미터 선택·모든 분석에서 **제외**된다 — 계획 5·10절이 요구하는
+실패 기록 보존 목적으로만 유지한다.
+
 ## Withdrawn manuscript reference / 철회 원고 참조
 
 The withdrawn submission carries two identifiers, recorded here by role.

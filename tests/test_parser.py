@@ -1,5 +1,5 @@
-"""Parser fixtures (plan v2.0 §5, parser v2) — part of the gate.
-파서 fixture (계획 v2.0 5절, 파서 2판) — 게이트의 일부.
+"""Parser fixtures (plan v2.0 §5, parser v3) — part of the gate.
+파서 fixture (계획 v2.0 5절, 파서 3판) — 게이트의 일부.
 """
 
 from __future__ import annotations
@@ -45,6 +45,19 @@ FIXTURES = [
     # Unique dimension in a long sentence, no marker.
     # marker 없는 장문의 유일 차원.
     ("Given the card, matching on the number dimension makes sense.", "number", 0),
+    # v3 regex marker patterns — phrasings observed in the 2026-07-15
+    # pilot. / v3 정규식 marker — 2026-07-15 파일럿에서 관찰된 표현.
+    ("I'll sort this card by **color**: yellow.", "color", 0),
+    ("Sorting by color: green", "color", 0),
+    ("Sorted by **shape**: triangle", "shape", 0),
+    ("I'll choose color.", "color", 0),
+    ("I'd go with number here, not shape.", "number", 0),
+    ("I will pick the shape dimension.", "shape", 0),
+    # Refusal-to-choose stays ambiguous. / 선택 회피는 여전히 모호.
+    ("I don't have enough context to give a meaningful answer.", "", 1),
+    # Word boundary on patterns: "resorted by" must not match.
+    # 패턴에도 단어 경계: "resorted by"는 marker가 아니다.
+    ("The cards were resorted by the dealer.", "", 1),
 ]
 
 
