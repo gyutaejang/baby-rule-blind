@@ -28,6 +28,16 @@ v0 정책 (파라미터는 study2-freeze 태그 전까지 탐색 조정 가능):
    now-discredited dimension, remap to the most promising alternative.
    window 안에서 원선택이 신뢰를 잃은 그 차원이면 가장 유망한 대안으로
    바꾼다.
+4. Stuckness rescue (v1) / 고착 구조 (v1): independent of any window, a
+   dimension whose frozen choices keep failing accumulates a failure
+   streak; when the raw choice is such a dimension, remap. This covers
+   the v0 blind spot — fixation at session start, before any belief has
+   formed — and makes the NoVeto ablation meaningful (it isolates the
+   window's contribution while rescue stays active).
+   window와 무관하게, 동결 선택이 계속 실패하는 차원에는 실패 연속이
+   누적된다. 원선택이 그런 차원이면 remap한다. 이는 v0의 맹점 — 신뢰가
+   형성되기 전 세션 초반의 고착 — 을 메우고, NoVeto 절제 조건에 의미를
+   부여한다(rescue는 유지된 채 window의 기여만 분리).
 
 Condition 3 (ablation) is this same class with veto_window=0.
 조건 3(절제)은 같은 클래스에 veto_window=0을 준 것이다.
@@ -44,12 +54,25 @@ class RuleBlindFullController(FeedbackAwareController):
 
     def __init__(
         self,
-        error_streak_to_open: int = 2,
-        veto_window: int = 3,
+        error_streak_to_open: int = 1,
+        veto_window: int = 4,
         belief_confirm_streak: int = 2,
         value_gain: float = 0.30,
         value_loss: float = 0.30,
+        rescue_error_streak: int = 2,
+        rescue_cooldown: int = 6,
     ) -> None:
+        # v1 defaults were chosen by the documented exploratory search
+        # (analysis/param_search.py, 288 configs on the archived streams)
+        # under the stated constraint set: maximize pooled accuracy
+        # subject to persistence <= 9 and intervention rate <= 25% of
+        # trials (supervisor regime). EXPLORATORY until the study2-freeze
+        # tag; Study 2 runs only after these are frozen.
+        # v1 기본값은 공개된 탐색(analysis/param_search.py, 보관 스트림에
+        # 대한 288개 설정)에서, 명시된 제약 — 고착 오류 9 이하, 개입률
+        # 25% 이하(감독자 체제) 하에서 합산 정확도 최대화 — 로 선택했다.
+        # study2-freeze 태그 전까지는 탐색적이며, Study 2는 동결 이후에만
+        # 실행한다.
         # Consecutive errors on the believed dimension needed to open the
         # veto window (change detected from outcomes alone).
         # veto window를 열기 위해 필요한, 신뢰 차원에서의 연속 오류 수
@@ -74,6 +97,28 @@ class RuleBlindFullController(FeedbackAwareController):
         self.value_gain = value_gain
         self.value_loss = value_loss
 
+        # Stuckness rescue: consecutive failures of a dimension (as the
+        # frozen final choice) needed before that dimension's raw choices
+        # get remapped even outside a window. 0 disables the rescue path.
+        # 고착 구조: 어떤 차원이 (동결된 최종 선택으로서) 몇 번 연속
+        # 실패해야 window 밖에서도 그 차원의 원선택을 remap할지. 0이면
+        # rescue 경로 비활성화.
+        self.rescue_error_streak = rescue_error_streak
+
+        # Minimum trials between rescue interventions. Without this the
+        # rescue fires on every raw repetition of a discredited dimension
+        # (its failure streak can never reset while it is being remapped),
+        # and the controller drifts from supervisor to de-facto player —
+        # a regime the parameter search showed raises accuracy but WORSENS
+        # perseveration.
+        # rescue 개입 사이의 최소 trial 간격. 이것이 없으면 신뢰를 잃은
+        # 차원의 원선택 반복마다 rescue가 발화하고(remap되는 동안 그
+        # 차원의 실패 연속은 초기화될 수 없다), 컨트롤러가 감독자에서
+        # 사실상 선수로 변질된다 — 파라미터 탐색에서 정확도는 오르지만
+        # 고착이 '악화'되는 것으로 확인된 체제다.
+        self.rescue_cooldown = rescue_cooldown
+        self._rescue_cooldown_remaining = 0
+
         # --- Internal state, all inferred from outcomes only ---
         # --- 내부 상태: 전부 정오로부터만 추론된다 ---
 
@@ -95,6 +140,13 @@ class RuleBlindFullController(FeedbackAwareController):
         self._correct_streak_choice: str = ""
         self._correct_streak: int = 0
         self._error_streak_on_believed: int = 0
+
+        # Per-dimension consecutive-failure counters over frozen final
+        # choices (feeds the rescue path). Reset by a correct outcome of
+        # that dimension.
+        # 동결된 최종 선택 기준의 차원별 연속 실패 카운터 (rescue 경로에
+        # 공급). 해당 차원의 정답으로 초기화된다.
+        self._fail_streak = {rule: 0 for rule in RULES}
 
         # Remaining trials of the currently open veto window.
         # 현재 열린 veto window의 남은 trial 수.
@@ -119,6 +171,8 @@ class RuleBlindFullController(FeedbackAwareController):
 
     def decide(self, public_trial: PublicTrial, raw_choice: str) -> str:
         self._trial_number = public_trial.trial_number
+        if self._rescue_cooldown_remaining > 0:
+            self._rescue_cooldown_remaining -= 1
         final_choice = raw_choice
 
         # Intervene only while a window is open, and only against the
@@ -134,6 +188,21 @@ class RuleBlindFullController(FeedbackAwareController):
             and raw_choice == self.discredited
         ):
             final_choice = self._best_alternative(excluding=raw_choice)
+        elif (
+            self.rescue_error_streak > 0
+            and self._rescue_cooldown_remaining == 0
+            and raw_choice in RULES
+            and self._fail_streak[raw_choice] >= self.rescue_error_streak
+        ):
+            # Stuckness rescue (v1): this dimension has failed repeatedly
+            # as a frozen choice, yet the LLM (which by design never sees
+            # outcomes) is still proposing it. Remap regardless of any
+            # window.
+            # 고착 구조 (v1): 이 차원은 동결 선택으로서 반복 실패했는데도
+            # (설계상 정오를 못 보는) LLM이 계속 제안하고 있다. window와
+            # 무관하게 remap한다.
+            final_choice = self._best_alternative(excluding=raw_choice)
+            self._rescue_cooldown_remaining = self.rescue_cooldown
 
         if final_choice in RULES:
             self._last_tried[final_choice] = self._trial_number
@@ -186,6 +255,7 @@ class RuleBlindFullController(FeedbackAwareController):
 
         if correct:
             self.values[choice] = min(1.0, self.values[choice] + self.value_gain)
+            self._fail_streak[choice] = 0
 
             # Extend or start the correct streak for this dimension.
             # 이 차원의 연속 정답을 잇거나 새로 시작한다.
@@ -210,6 +280,7 @@ class RuleBlindFullController(FeedbackAwareController):
             self.values[choice] = max(0.0, self.values[choice] - self.value_loss)
             self._correct_streak_choice = ""
             self._correct_streak = 0
+            self._fail_streak[choice] += 1
 
             # Errors on the believed dimension are the change signal.
             # 신뢰 차원에서의 오류가 곧 변화 신호다.

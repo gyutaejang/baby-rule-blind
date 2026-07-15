@@ -1,9 +1,11 @@
 model,condition,n_defined,n_excluded_zero_interventions,productive_rate_mean
+claude,NoVeto,30,0,0.2917
 claude,OracleFull,30,0,0.5559
-claude,RuleBlindFull,30,0,0.5639
+claude,RuleBlindFull,30,0,0.6377
 claude,TrajectoryOnly,30,0,0.4356
-claude,YokedRandom,30,0,0.3639
+claude,YokedRandom,30,0,0.4836
+gpt,NoVeto,30,0,0.1
 gpt,OracleFull,30,0,0.4166
-gpt,RuleBlindFull,30,0,0.561
+gpt,RuleBlindFull,30,0,0.6211
 gpt,TrajectoryOnly,30,0,0.275
-gpt,YokedRandom,30,0,0.351
+gpt,YokedRandom,30,0,0.4582
