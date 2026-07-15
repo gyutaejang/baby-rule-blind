@@ -3,9 +3,18 @@ __pycache__/
 *.pyc
 .venv/
 
-# Secrets — API keys must never be committed
-# 비밀 정보 — API 키는 절대 커밋하지 않는다
+# Secrets — API keys live ONLY in .env; never in code, logs, CSVs, docs,
+# or terminal output. .env.example (variable names, empty values) is the
+# single tracked exception.
+# 비밀 정보 — API 키는 오직 .env에만 둔다. 코드·로그·CSV·문서·터미널
+# 출력에 노출 금지. 추적되는 유일한 예외는 .env.example(변수명만, 값
+# 비움)이다.
 .env
+*.env
+.env.*
+!.env.example
+*.pem
+*.key
 
 # OS
 Thumbs.db
