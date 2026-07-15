@@ -35,8 +35,48 @@ from analysis.paired_stats import (  # noqa: E402
 )
 
 
+EXPECTED_MODELS = (
+    "claude-opus-4-8",
+    "claude-sonnet-5",
+    "gpt-5.5-2026-04-23",
+    "gpt-5.4-mini-2026-03-17",
+)
+EXPECTED_CONDITIONS = (
+    "RawLLM", "RuleBlindFull", "NoVeto", "TrajectoryOnly",
+    "YokedRandom", "WSLSBudgeted", "WSLSUnlimited", "OracleFull",
+)
+EXPECTED_REPS = 130
+
+
+def assert_confirmatory_grid(summary_path: Path) -> None:
+    """Exact-grid check for the confirmatory dataset (review P2): every
+    (model, condition) cell must contain reps 1..130 exactly once.
+    확증 데이터의 정확한 grid 검증 (검토 P2): 모든 (model, condition)
+    칸에 rep 1..130이 정확히 한 번씩 있어야 한다."""
+    rows = load_summary(summary_path)
+    expected_reps = set(range(1, EXPECTED_REPS + 1))
+    cells = {}
+    for r in rows:
+        cells.setdefault((r["model"], r["condition"]), []).append(int(r["rep"]))
+    expected_cells = {
+        (m, c) for m in EXPECTED_MODELS for c in EXPECTED_CONDITIONS
+    }
+    if set(cells) != expected_cells:
+        raise SystemExit(
+            f"grid cells mismatch: missing={sorted(expected_cells - set(cells))} "
+            f"unexpected={sorted(set(cells) - expected_cells)} / grid 칸 불일치"
+        )
+    for key, reps in cells.items():
+        if sorted(reps) != sorted(expected_reps):
+            raise SystemExit(
+                f"cell {key} does not contain reps 1..{EXPECTED_REPS} exactly "
+                f"once ({len(reps)} rows) / rep 집합 불일치"
+            )
+
+
 def main() -> None:
     summary_path = PROJECT_ROOT / "results" / "study2_summary.csv"
+    assert_confirmatory_grid(summary_path)
     results = run_comparisons(summary_path, label="study2_confirmatory")
 
     out_path = PROJECT_ROOT / "results" / "study2_paired_stats.csv"

@@ -28,6 +28,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 # added (and IDs pinned) at pilot-freeze.
 # 모델별 생성 설정 (계획 v2.0 5절에서 동결). OpenAI 항목은 pilot-freeze
 # 시점에 추가·고정한다.
+# Pinned OpenAI generation config (pilot-freeze-v2, 2026-07-15): exact
+# confirmatory IDs and the lowest accepted reasoning setting. The runner
+# refuses any other value so the frozen setting is ENFORCED, not advisory
+# (external review P1, 2026-07-15).
+# 고정된 OpenAI 생성 설정 (pilot-freeze-v2): 확증 모델 ID와 최저 추론
+# 설정. 러너는 다른 값을 거부한다 — 동결 설정은 권고가 아니라 강제다
+# (외부 검토 P1 반영).
+OPENAI_CONFIGS: Dict[str, Dict] = {
+    "gpt-5.5-2026-04-23": {"reasoning_effort": "none"},
+    "gpt-5.4-mini-2026-03-17": {"reasoning_effort": "none"},
+}
+
 ANTHROPIC_CONFIGS: Dict[str, Dict] = {
     # Opus 4.8: thinking omitted -> runs without thinking (default).
     "claude-opus-4-8": {"max_tokens": 64, "thinking": None},
@@ -96,10 +108,20 @@ def build_anthropic_call(model_id: str) -> CallFn:
 
 def build_openai_call(model_id: str, reasoning_effort: str | None = None) -> CallFn:
     """Live OpenAI call function; exact model IDs and reasoning settings
-    are pinned at pilot-freeze.
-    실제 OpenAI 호출 함수; 정확한 모델 ID·추론 설정은 pilot-freeze에서
-    고정한다."""
+    are pinned at pilot-freeze and ENFORCED here.
+    실제 OpenAI 호출 함수; 모델 ID·추론 설정은 pilot-freeze에서 고정되며
+    여기서 강제된다."""
     from openai import OpenAI  # lazy / 지연
+
+    if model_id not in OPENAI_CONFIGS:
+        raise SystemExit(f"no frozen config for model {model_id} / 동결된 설정 없음")
+    pinned = OPENAI_CONFIGS[model_id]["reasoning_effort"]
+    if reasoning_effort is not None and reasoning_effort != pinned:
+        raise SystemExit(
+            f"reasoning_effort {reasoning_effort!r} conflicts with the frozen "
+            f"value {pinned!r} for {model_id} / 동결 값과 충돌"
+        )
+    reasoning_effort = pinned
 
     client = OpenAI()  # reads OPENAI_API_KEY from env
 

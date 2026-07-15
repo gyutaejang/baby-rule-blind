@@ -156,6 +156,19 @@ def write_repetition(
     model_dir.mkdir(parents=True, exist_ok=True)
 
     public_path = model_dir / f"rep_{rep_index:02d}_public.csv"
+    attempts_check = model_dir / f"rep_{rep_index:02d}_attempts.csv"
+    # Never overwrite an existing repetition: the original failure record
+    # must survive any retry/replacement (plan §5; review P1). Move the
+    # old files to an archive directory first if a re-run is intended.
+    # 기존 repetition은 절대 덮어쓰지 않는다: 재시도·대체 시에도 원 실패
+    # 기록이 보존되어야 한다 (계획 5절; 검토 P1). 재실행하려면 기존
+    # 파일을 먼저 보관 디렉터리로 옮겨라.
+    if public_path.exists() or attempts_check.exists():
+        raise SystemExit(
+            f"refusing to overwrite existing repetition files for "
+            f"{model_label} rep {rep_index:02d} ({public_path}) — archive "
+            f"them first / 기존 rep 파일 덮어쓰기 거부 — 먼저 보관하세요"
+        )
     with open(public_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
@@ -238,13 +251,21 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    from study2.clients import build_anthropic_call, build_openai_call, load_env
+    from study2.clients import (
+        ANTHROPIC_CONFIGS,
+        OPENAI_CONFIGS,
+        build_anthropic_call,
+        build_openai_call,
+        load_env,
+    )
 
     load_env()
     if args.provider == "anthropic":
         call_fn = build_anthropic_call(args.model)
+        generation_config = ANTHROPIC_CONFIGS[args.model]
     else:
         call_fn = build_openai_call(args.model, args.reasoning_effort)
+        generation_config = OPENAI_CONFIGS[args.model]
 
     out_root = PROJECT_ROOT / ("data/public_study2_pilot" if args.pilot else "data/public_study2")
     model_label = args.model.replace("/", "_")
@@ -252,9 +273,29 @@ def main() -> None:
         "provider": args.provider,
         "pilot": "1" if args.pilot else "0",
         "library_versions": json.dumps(library_versions(), sort_keys=True),
+        # Actual frozen generation config used for every call in this
+        # invocation — auditable from the manifest alone (review P1).
+        # 이 실행의 모든 호출에 쓰인 동결 생성 설정 — manifest만으로 감사
+        # 가능 (검토 P1 반영).
+        "generation_config": json.dumps(generation_config, sort_keys=True),
     }
 
-    for rep in parse_rep_range(args.reps):
+    # Pre-flight overwrite check BEFORE any API call, so a collision
+    # costs nothing (the write-time guard remains as defense in depth).
+    # API 호출 전 사전 충돌 검사 — 충돌 시 비용 지출 없이 중단 (write
+    # 시점 가드는 이중 방어로 유지).
+    reps = parse_rep_range(args.reps)
+    model_dir = out_root / model_label
+    for rep in reps:
+        for name in (f"rep_{rep:02d}_public.csv", f"rep_{rep:02d}_attempts.csv"):
+            if (model_dir / name).exists():
+                raise SystemExit(
+                    f"refusing to overwrite {model_dir / name} — archive "
+                    f"existing repetition files first / 덮어쓰기 거부 — "
+                    f"기존 rep 파일을 먼저 보관하세요"
+                )
+
+    for rep in reps:
         rows, log = generate_repetition(call_fn, rep, sleep_seconds=args.sleep)
         entry = write_repetition(model_label, rep, rows, log, out_root, manifest_extra)
         n_fail = sum(1 for r in rows if r["api_error"] == "1" or r["refusal"] == "1")

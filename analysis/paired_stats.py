@@ -178,10 +178,51 @@ def paired_values(
     return diffs, dropped
 
 
+def validate_pairing_grid(rows: List[Dict[str, str]]) -> None:
+    """Fail loudly on duplicate or missing repetitions BEFORE any pairing
+    (external review P2, 2026-07-15). A duplicate (model, condition, rep)
+    row would silently overwrite in the pairing dictionaries; a rep
+    present in one condition but not another would be silently excluded
+    by the intersection without appearing in n_dropped. Neither is an
+    acceptable state for a confirmatory analysis, so both abort.
+
+    짝짓기 이전에 중복·누락 repetition을 소리내어 거부한다 (외부 검토
+    P2). 중복 (model, condition, rep) 행은 pairing dictionary에서 조용히
+    덮어써지고, 한 조건에만 없는 rep는 교집합에서 n_dropped에도 잡히지
+    않고 제외된다. 확증 분석에서 허용할 수 없는 상태이므로 둘 다
+    중단한다."""
+    reps_by_cell: Dict[Tuple[str, str], set] = {}
+    for r in rows:
+        key = (r["model"], r["condition"])
+        rep = int(r["rep"])
+        cell = reps_by_cell.setdefault(key, set())
+        if rep in cell:
+            raise SystemExit(
+                f"duplicate repetition in summary: model={key[0]} "
+                f"condition={key[1]} rep={rep} / 중복 repetition"
+            )
+        cell.add(rep)
+    by_model: Dict[str, Dict[str, set]] = {}
+    for (model, condition), reps in reps_by_cell.items():
+        by_model.setdefault(model, {})[condition] = reps
+    for model, conditions in by_model.items():
+        reference_condition = min(conditions)
+        reference = conditions[reference_condition]
+        for condition, reps in conditions.items():
+            if reps != reference:
+                missing = sorted(reference ^ reps)
+                raise SystemExit(
+                    f"incomplete pairing grid: model={model} condition="
+                    f"{condition} differs from {reference_condition} on "
+                    f"reps {missing} / 짝짓기 grid 불완전"
+                )
+
+
 def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
     """Run the plan §7 comparison set on one summary file.
     요약 파일 하나에 계획 7절의 비교 집합을 적용한다."""
     rows = load_summary(summary_path)
+    validate_pairing_grid(rows)
     models = sorted({r["model"] for r in rows})
 
     # Primary family (plan v2.0 §8): the CO-PRIMARY sparse supervisors
