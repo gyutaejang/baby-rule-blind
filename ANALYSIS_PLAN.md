@@ -351,7 +351,57 @@ a Study 2 end-to-end dry run against a mock API.
 불변식(하드 예산, WSLS fixture, 지표 수작업 계산, 개입 귀속, 일정 1만
 시드, yoked 일치); pilot-freeze부터는 mock API 대상 end-to-end dry run.
 
-## 12. Out of scope / 범위 외
+## 12. Independent external review / 독립 외부 검토
+
+Before resubmission, the frozen code and manuscript undergo independent
+review by people other than the author and the AI assistant that wrote
+the code. Scope is FIXED in advance to keep cost bounded.
+재제출 전, 동결된 코드와 원고는 저자 및 코드를 작성한 AI 어시스턴트가
+아닌 사람의 독립 검토를 받는다. 비용을 제한하기 위해 범위를 사전에
+고정한다.
+
+- **Engagement title / 의뢰 명칭**: "Independent reproducibility and
+  statistical review of a small computational study" (not "code audit",
+  which invites enterprise-security-scale quotes).
+  ("code audit"라 부르지 않는다 — 기업 보안감사 규모의 견적을 부른다.)
+- **Code reviewer** (CS background / 컴퓨터공학): clean-environment
+  execution; verification that no ground-truth information reaches
+  `controller/`; end-to-end reproduction from raw data to every number
+  in the manuscript. Entry route: CODECHECK (free, certificate with
+  DOI) first; paid fixed-scope reviewer if unavailable.
+  코드 검토자: 깨끗한 환경 실행, 정답 정보 비유입 확인, 원자료→논문
+  수치 전체 재현. 경로: CODECHECK(무료, DOI 인증서) 우선, 불가 시 고정
+  범위 유료 검토.
+- **Statistics reviewer** (statistics/quant-methods graduate level or
+  above / 통계·수리 석박사급): paired design validity, permutation/
+  bootstrap implementation, multiplicity, metric definitions, and
+  whether conclusions exceed the evidence. Entry route: university
+  statistical consulting first (often free initial sessions).
+  통계 검토자: paired 설계, permutation/bootstrap 구현, 다중성, 지표
+  정의, 결론 강도. 경로: 대학 통계상담실 우선(초회 무료가 흔함).
+- **Contract shape / 계약 형태**: fixed scope (≤ 8 hours per reviewer)
+  + written findings report; fixes are implemented by us; reviewers
+  provide findings and a final confirmation only. Target budget
+  ~₩1.5–3M total; lower if CODECHECK and university consulting apply.
+  고정 범위(검토자당 ≤ 8시간) + 서면 보고서. 수정 구현은 우리가 하고
+  검토자는 발견사항과 최종 확인서만 제공. 목표 예산 총 150–300만 원,
+  CODECHECK·대학 상담 적용 시 그 이하.
+- **Timing / 시점**: reviewers engage only AFTER the manuscript-freeze
+  commit, against a prepared review package (`REVIEWERS.md`: one-command
+  reproduction script, environment spec, hash manifest, file map) — so
+  paid hours go to verification, not orientation.
+  검토는 원고 동결 커밋 이후, 준비된 검토 패키지(원클릭 재현 스크립트,
+  환경 명세, 해시 manifest, 파일 지도)에 대해서만 진행한다 — 유료
+  시간이 '정리'가 아니라 '검증'에만 쓰이게 한다.
+- **Reporting / 보고**: reviewer names/roles (with consent), findings,
+  and resolutions appear in the paper's transparency statement,
+  alongside the withdrawal history and this plan's version trail.
+  검토자 이름·역할(동의 시), 발견사항과 해결 내역을 철회 이력·계획
+  버전 이력과 함께 논문 투명성 진술에 기재한다.
+- English-language editing of the manuscript is budgeted separately by
+  the author. / 영문 교정은 저자가 별도 예산으로 진행한다.
+
+## 13. Out of scope / 범위 외
 
 - No claim that the supervisor improves the LLM itself (memoryless by
   design). / 감독자가 LLM 자체를 개선한다는 주장 없음.
