@@ -36,6 +36,8 @@ from typing import Optional
 
 from controller.base import RULES, FeedbackAwareController, PublicTrial
 
+# NOTE: co-primary condition (plan v2.0 §3). / 공동 주 조건 (계획 3절).
+
 
 class WSLSController(FeedbackAwareController):
     """Win-stay/lose-shift supervisor. / win-stay/lose-shift 감독자."""

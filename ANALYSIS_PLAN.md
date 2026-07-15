@@ -163,29 +163,48 @@ Development-contact ledger (reported in the paper) / 개발 접촉 이력표:
 ## 5. Study 2 models and generation config / Study 2 모델·생성 설정
 
 Two families × capability tiers (generation axis + capability axis;
-Haiku-tier excluded by decision of 2026-07-15):
+Haiku-tier excluded by decision of 2026-07-15). **FOUR confirmatory
+models**:
 
-| Family | Tier | Model (exact ID pinned at pilot-freeze) |
+| Family | Tier | Model |
 |---|---|---|
-| Anthropic | Frontier | Claude Fable 5 (`claude-fable-5`) |
 | Anthropic | Flagship | Claude Opus 4.8 (`claude-opus-4-8`) |
 | Anthropic | Mid | Claude Sonnet 5 (`claude-sonnet-5`) |
 | OpenAI | Flagship | current flagship at generation time / 생성 시점 플래그십 |
 | OpenAI | Mid | current mid tier / 생성 시점 중위 티어 |
+
+**Claude Fable 5 dropped by the pre-registered budget criterion**
+(2026-07-15, before pilot-freeze): at N = 130 its always-on thinking
+tokens dominate projected cost (~$70–90 of ~$100–150 total), exceeding
+the currently available budget. It is retained as a PRE-REGISTERED
+OPTIONAL EXTENSION — same frozen design, stimuli, schedules, and
+generation config (§ below) — to be run if and when funding (e.g., an
+institutional API-credit program) becomes available. The
+generation-transfer label (§8) therefore applies over 4 models:
+replicated in ≥3 → "broad", 2 → "partial", ≤1 → "no transfer".
+
+**Claude Fable 5는 사전 등록된 예산 기준으로 제외**(2026-07-15,
+pilot-freeze 이전): N=130에서 상시 thinking 토큰이 예상 비용을
+지배(~총 $100–150 중 $70–90)해 가용 예산을 초과한다. 동일한 동결
+설계·자극·일정·생성 설정의 **사전 등록된 선택적 확장**으로 유지하며,
+기관 크레딧 등 재원 확보 시 실행한다. 이에 따라 세대 전이 라벨(8절)은
+4개 모델 기준으로 적용한다: ≥3 재현 = broad, 2 = partial, ≤1 = no
+transfer.
 
 Per-model generation config / 모델별 생성 설정:
 
 - Opus 4.8: omit `thinking` (off by default); no sampling params.
 - Sonnet 5: explicit `thinking: {type: "disabled"}`; no non-default
   sampling params.
-- Fable 5: thinking CANNOT be disabled — omit `thinking`, set
+- Fable 5 (OPTIONAL EXTENSION only, see roster above / 선택적 확장
+  전용): thinking CANNOT be disabled — omit `thinking`, set
   `output_config.effort: "low"`, `max_tokens` headroom (~2000).
   Documented asymmetry: internal reasoning cannot reveal rule shifts
   (no feedback in the prompt); whether it changes raw-stream character
   (entropy, repeat rate) is itself a reported descriptive result.
-  Fable 5: 추론 비활성 불가 — `thinking` 생략, effort low, max_tokens
-  여유. 비대칭은 명시: 프롬프트에 피드백이 없어 추론으로도 규칙 전환은
-  알 수 없으며, 원 스트림 특성 변화 여부 자체가 보고 대상이다.
+  추론 비활성 불가 — `thinking` 생략, effort low, max_tokens 여유.
+  비대칭은 명시: 프롬프트에 피드백이 없어 추론으로도 규칙 전환은 알 수
+  없으며, 원 스트림 특성 변화 여부 자체가 보고 대상이다.
 - OpenAI: lowest available reasoning setting if a reasoning model;
   provider-default sampling, recorded.
 - Model IDs, API/library versions (`anthropic`, `openai`,
