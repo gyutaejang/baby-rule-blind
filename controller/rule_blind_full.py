@@ -219,6 +219,24 @@ class RuleBlindFullController(FeedbackAwareController):
         """Pick the most promising non-discredited alternative.
         신뢰를 잃지 않은 대안 중 가장 유망한 것을 고른다.
 
+        v2: the currently discredited dimension is also excluded from the
+        candidate set. Its estimated value is still high right after it
+        stops being rewarded (value carried over from its successful
+        streak), so a purely value-ranked choice tends to remap INTO it —
+        the exact perseveration this controller exists to reduce. Study 1
+        showed this as Full carrying MORE persistence errors than the
+        yoked-random placebo. With three dimensions this exclusion leaves
+        at least one candidate whenever the discredited dimension differs
+        from the excluded raw choice; otherwise the value ranking applies
+        to the remaining two.
+        v2: 현재 신뢰를 잃은 차원도 후보에서 제외한다. 보상이 끝난 직후
+        그 차원의 추정 가치는 (성공 연속에서 이월되어) 여전히 높아, 순수
+        가치 순위 선택은 오히려 그 차원으로 remap하는 경향이 있다 — 이
+        컨트롤러가 줄이려는 바로 그 고착이다. Study 1에서 이 편향은 Full이
+        yoked-random 위약보다 고착 오류가 '많은' 것으로 나타났다. 차원이
+        셋이므로, 신뢰 상실 차원이 제외 대상 원선택과 다르면 후보는 최소
+        하나 남고, 같으면 나머지 둘에 가치 순위가 적용된다.
+
         Ranking: higher estimated value first; ties resolved by the least
         recently tried dimension, then by fixed RULES order. Every input
         to this ranking is outcome-derived or public — never the identity
@@ -228,7 +246,9 @@ class RuleBlindFullController(FeedbackAwareController):
         파생값 또는 공개 정보이며, 현재 보상되는 차원의 정체는 절대
         사용되지 않는다.
         """
-        alternatives = [r for r in RULES if r != excluding]
+        alternatives = [r for r in RULES if r != excluding and r != self.discredited]
+        if not alternatives:
+            alternatives = [r for r in RULES if r != excluding]
         return max(
             alternatives,
             key=lambda r: (self.values[r], -self._last_tried[r], -RULES.index(r)),
