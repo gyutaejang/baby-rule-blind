@@ -12,8 +12,10 @@ ANALYSIS_PLAN.md의 주 조건. 이 컨트롤러는 사람 WCST 참가자의 감
 동결된 '이후' 그 선택의 정오는 본다. 과제 상태에 대해 아는 모든 것은 이
 정오 시퀀스로부터 추론된다.
 
-v0 policy (parameters exploratory until the study2-freeze tag)
-v0 정책 (파라미터는 study2-freeze 태그 전까지 탐색 조정 가능):
+Policy (parameters exploratory only until the PILOT-FREEZE tag — the
+pilot never touches parameter selection; plan v2.0 §10)
+정책 (파라미터는 PILOT-FREEZE 태그 전까지만 탐색 조정 가능 — 파일럿은
+파라미터 선택에 관여하지 않는다; 계획 v2.0 10절):
 
 1. Belief tracking / 신뢰 추적: a dimension that was recently rewarded
    repeatedly is the "believed" dimension.

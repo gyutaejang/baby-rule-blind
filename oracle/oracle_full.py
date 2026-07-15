@@ -1,18 +1,18 @@
-"""Condition 6 — Oracle-Full: corrected ceiling reference.
-조건 6 — Oracle-Full: 교정된 상한선 참조.
+"""Condition 8 — OracleFull: oracle-assisted policy reference (corrected).
+조건 8 — OracleFull: oracle 보조 정책 참조 (교정판). 상한선이 아니다(이론적 상한 = 1.0).
 
 This is a CLEAN REIMPLEMENTATION of the withdrawn Baby40 controller's
 *intended* policy, with its known implementation bugs fixed. It is the
 only component besides the Evaluator that may read ground truth, which is
 why it lives OUTSIDE the controller/ package (whose CI gate bans
 ground-truth tokens). Per ANALYSIS_PLAN.md §3 it appears only as a
-ceiling reference in the appendix and is never evidence for the main
+oracle-assisted policy reference in the appendix (NOT a ceiling; theoretical ceiling = 1.0) and is never evidence for the main
 hypotheses.
 
 철회된 Baby40 컨트롤러가 '의도했던' 정책을, 알려진 구현 버그를 고쳐서
 깨끗하게 재구현한 것이다. Evaluator 외에 ground truth를 읽을 수 있는
 유일한 구성요소이며, 그래서 (금지어 CI가 걸린) controller/ 패키지 바깥에
-둔다. ANALYSIS_PLAN.md 3절에 따라 부록의 상한선 참조로만 쓰이고 주 가설의
+둔다. ANALYSIS_PLAN.md 3절에 따라 부록의 oracle 보조 정책 참조로만 쓰이고(상한선 아님) 주 가설의
 근거로는 절대 사용되지 않는다.
 
 Fixes relative to the original Baby40 / 원본 Baby40 대비 수정 사항:
@@ -37,11 +37,11 @@ Fixes relative to the original Baby40 / 원본 Baby40 대비 수정 사항:
 3. Single tie-break policy, stated openly / 동점 해소 정책 단일화·명시:
    the original broke remap ties toward the true current rule while the
    paper described the controller as feedback-free. The oracle version
-   remaps DIRECTLY to the true rule — that is what makes it a ceiling —
+   remaps DIRECTLY to the true rule — the defining oracle assist —
    and says so, instead of hiding the oracle inside a tie-break.
    원본은 논문에서 feedback-free라 기술하면서 remap 동점을 정답 규칙
    쪽으로 해소했다. oracle 판은 정답 규칙으로 '직접' remap한다 — 그것이
-   상한선의 정의다 — 그리고 그 사실을 동점 해소 속에 숨기지 않고 명시한다.
+   oracle 보조의 정의다 — 그리고 그 사실을 동점 해소 속에 숨기지 않고 명시한다.
 
 4. Productive-interruption bookkeeping removed / productive 계산 제거:
    the original computed it twice with different definitions. Here it is
@@ -62,7 +62,7 @@ from controller.base import RULES, PublicTrial, RuleBlindController
 
 class OracleFullController(RuleBlindController):
     """Ceiling supervisor with full ground-truth access.
-    ground truth 전체에 접근하는 상한선 감독자."""
+    ground truth 전체에 접근하는 oracle 보조 정책 참조 감독자(상한선 아님)."""
 
     feedback_aware = False  # needs no feedback: it already knows everything
     #                         피드백이 필요 없다: 이미 모든 것을 알고 있다.
@@ -157,9 +157,9 @@ class OracleFullController(RuleBlindController):
             self._wrong_streak = 0
 
         if intervene:
-            # FIX 3: the ceiling remaps directly to the true rule and is
+            # FIX 3: the oracle-assisted reference remaps directly to the true rule and is
             # documented as doing so.
-            # 수정 3: 상한선은 정답 규칙으로 직접 remap하며, 그렇게 한다고
+            # 수정 3: oracle 보조 참조는 정답 규칙으로 직접 remap하며, 그렇게 한다고
             # 명시한다.
             final_choice = true_rule
             self._wrong_streak_choice = ""

@@ -1,12 +1,13 @@
 """Study 1 — archived-stream retrospective replay (EXPLORATORY).
 Study 1 — 보관 스트림 회고 재생 (탐색적).
 
-Replays all 60 archived raw streams (30 claude + 30 gpt) through the six
-conditions fixed in ANALYSIS_PLAN.md §3. Because every condition consumes
-the SAME stream, comparisons are repetition-level paired by construction.
+Replays all 60 archived raw streams (30 claude + 30 gpt) through the
+eight conditions fixed in ANALYSIS_PLAN.md §3. Because every condition
+consumes the SAME stream, comparisons are repetition-level paired by
+construction.
 
 보관된 원 스트림 60개(claude 30 + gpt 30)를 ANALYSIS_PLAN.md 3절에 고정된
-여섯 조건에 재생한다. 모든 조건이 '같은' 스트림을 소비하므로 비교는
+여덟 조건에 재생한다. 모든 조건이 '같은' 스트림을 소비하므로 비교는
 구성상 repetition 단위 paired가 된다.
 
 Outputs / 산출:

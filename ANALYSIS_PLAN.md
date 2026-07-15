@@ -53,11 +53,20 @@ Terminology rules / 용어 규칙:
   **previous-rule-aligned error**(코드 `prev_rule_error`)로 하며 "고착"
   이라 부르지 않고 인지적 고착 주장을 하지 않는다. 온라인 조건은 별도
   동결 실험으로 미룬다.
-- The headline claim is NOT raw accuracy (an unlimited feedback policy
-  trivially reaches ~.86) but **efficiency and safety under a hard
-  intervention budget**.
-  핵심 주장은 원 정확도가 아니라(무제한 피드백 정책은 ~.86에 도달)
-  **하드 개입 예산 하의 효율과 안전성**이다.
+- The headline claim is precisely: **an accuracy vs previous-rule-
+  aligned-error trade-off under a common hard intervention cap** (an
+  unlimited feedback policy trivially reaches ~.86, which is why the cap
+  defines the question). The cap is an upper bound — realized
+  intervention counts may differ between supervisors and are reported.
+  Per-intervention efficiency (accuracy gain per intervention, net
+  correction per intervention) and the direct safety metrics are
+  SECONDARY DESCRIPTIVE quantities (§7), not headline claims.
+  핵심 주장은 정확히 **공통 하드 개입 상한 하에서의 정확도-이전규칙정렬
+  오류 트레이드오프**다(무제한 피드백 정책은 ~.86에 도달하므로 상한이
+  질문을 정의한다). 상한은 상계이며 실현 개입 수는 감독자 간 다를 수
+  있고 그대로 보고한다. 개입당 효율(개입당 정확도 이득, 개입당 순 교정)
+  과 직접 안전성 지표는 **2차 기술 지표**(7절)이지 헤드라인 주장이
+  아니다.
 
 ## 2. Architecture and information isolation / 구조와 정보 격리
 
@@ -198,13 +207,33 @@ Per-model generation config / 모델별 생성 설정:
   전체 제외는 민감도 분석 전용. 실패 로그·attempt ID는 모두 보존하고,
   대체 repetition을 만들더라도 원 실패 기록을 남긴다.
 
-**Parsing (frozen)** / 파싱(동결): case-insensitive word-boundary match
-of dimension synonyms (color/colour/hue; shape/form; number/count/
-quantity/numerosity/amount — the archived study's table verbatim);
-earliest-position unique dimension wins; ties or no match → "" with
-`ambiguous_response = 1`; "" always passes through supervisors.
-대소문자 무시 단어 경계 일치(보관 연구의 동의어 표 그대로); 최초 위치
-유일 차원 채택; 동률·불일치는 ""(ambiguous)로 기록; ""는 항상 통과.
+**Parsing (frozen, v2)** / 파싱(동결, 2판): case-insensitive
+word-boundary matching of dimension synonyms (the archived study's table
+verbatim). If a final-answer marker occurs ("final choice", "final
+answer", "my choice is", "I choose", "sort by", "answer:", … — the
+frozen list in `study2/parser.py`), only the text AFTER THE LAST marker
+is parsed (earliest dimension there); with no marker, a UNIQUE dimension
+anywhere wins and zero or multiple dimensions → "" with
+`ambiguous_response = 1`. "" always passes through supervisors. The
+parser is fixture-tested in the gate.
+차원 동의어의 단어 경계 일치(보관 표 그대로). 최종 답변 marker("final
+choice" 등, `study2/parser.py`의 동결 목록)가 있으면 '마지막' marker
+이후만 파싱(그 구간 최초 차원); marker가 없으면 유일 차원 채택, 0개
+또는 복수 차원이면 ""(ambiguous). ""는 항상 통과. 파서는 게이트의
+fixture로 검증된다.
+
+**Stimuli (frozen)** / 자극(동결): the exact per-repetition prompt text,
+order, and card attributes are materialized by
+`scripts/generate_stimuli.py` into `data/stimuli_study2/` (hash
+manifest; system message = none) and committed BEFORE any API call. The
+runner reads ONLY these stimulus files — the request path never loads
+any ground-truth/schedule file (two-stage blindness, enforced by the
+dry-run gate). All models receive identical prompts at the same rep.
+repetition별 프롬프트 원문·순서·카드 속성은 `scripts/generate_stimuli.py`
+가 `data/stimuli_study2/`로 구체화(해시 manifest, system message 없음)해
+API 호출 전에 커밋한다. 러너는 이 자극 파일만 읽으며 요청 경로는 ground
+truth·일정 파일을 절대 읽지 않는다(2단계 맹검, dry-run 게이트로 강제).
+같은 rep의 모든 모델은 동일한 프롬프트를 받는다.
 
 ## 6. Schedules / 일정
 
@@ -251,6 +280,11 @@ Per repetition, on final choices / repetition 단위, 최종 선택 기준:
 - **subsequent_success_rate** (descriptive only; demoted — an
   intervention can satisfy it by later luck): at least one of the next
   two final choices correct.
+- **Per-intervention efficiency (secondary descriptive)** / 개입당 효율
+  (2차 기술): accuracy_gain_per_intervention = (condition accuracy −
+  RawLLM accuracy) × 36 / interventions; net_correction_per_intervention
+  = net_correction / interventions. Undefined (−1) at zero
+  interventions.
 
 All metric implementations are verified against hand calculations in the
 gate (`tests/test_design_invariants.py`).
@@ -262,16 +296,37 @@ All analyses per model; no pooling across models. Same-stream replay
 gives repetition-level pairing.
 모든 분석은 모델별. 같은 스트림 재생으로 repetition 단위 paired.
 
-**Primary family — FOUR tests per model (co-primary supervisors)**:
+**Primary family — FOUR tests per model (co-primary supervisors), with
+pre-registered directions and success criteria**:
 
-1. Full vs RawLLM — total accuracy
-2. WSLSBudgeted vs RawLLM — total accuracy
-3. WSLSBudgeted vs Full — total accuracy
-4. Full vs WSLSBudgeted — prev_rule_error
+| # | Test | Expected direction / 기대 방향 |
+|---|---|---|
+| 1 | Full vs RawLLM — accuracy | Full higher / Full 우위 (+) |
+| 2 | WSLSBudgeted vs RawLLM — accuracy | WSLS higher (+) |
+| 3 | WSLSBudgeted vs Full — accuracy | WSLS higher (+) |
+| 4 | Full vs WSLSBudgeted — prev_rule_error | Full lower (−) |
 
-**1차 family — 모델당 4개 검정 (공동 주 조건)**: 위 4개. Study 1 탐색
-결과(정확도는 WSLS 우위, prev_rule_error는 Full 우위)가 새 세대에서
-전이되는지가 확증 대상이다.
+- Tests are TWO-SIDED; a primary test **succeeds** iff Holm-adjusted
+  p < .05 AND the observed direction matches the pre-registered
+  direction. (Implemented in `analysis/paired_stats.py`, `success`
+  column.)
+  검정은 양측; 1차 검정의 **성공** = Holm p < .05 이고 관측 방향이 사전
+  방향과 일치 (`success` 열로 자동 산출).
+- **Per-model verdict / 모델별 판정**: the trade-off is REPLICATED on a
+  model iff ALL FOUR primary tests succeed. If the prev-rule headroom
+  gate (below) is closed, test 4 is NOT run, Holm is applied over the
+  three tests actually run, and the best attainable verdict is
+  "accuracy effects replicated" — never "trade-off replicated".
+  모델에서 트레이드오프가 재현됨 = 1차 4검정 전부 성공. prev-rule
+  게이트가 닫히면 검정 4는 실행하지 않고(실행된 3개에 Holm) 최대
+  "accuracy effects replicated"까지만 판정한다.
+- **Generation-transfer label (pre-registered, descriptive)** / 세대
+  전이 라벨(사전 등록, 기술적): with 5 models, trade-off replicated in
+  ≥4 → "broad transfer"; 2–3 → "partial transfer"; ≤1 → "no transfer".
+  Per-model results are always reported in full; the label never
+  replaces them.
+  5개 모델 중 ≥4 재현 = broad, 2–3 = partial, ≤1 = no transfer. 모델별
+  결과는 항상 전부 보고하며 라벨이 이를 대체하지 않는다.
 
 **Secondary (mechanism) family / 2차(기제) family**: Full vs YokedRandom
 (both metrics), Full vs NoVeto (both), Full & WSLS vs RawLLM on
@@ -311,9 +366,24 @@ biserial; 모델별·family별 원정밀도 p에 Holm; 해상도 하한은 p < .
   model iff the 95% CI lower bound of the paired accuracy difference
   > −0.02.
 
-**N / 표본**: 30 repetitions per model (confirmatory), paired across
-conditions; no interim analysis, no optional stopping. Pilot reps (§10)
-are excluded.
+**N / 표본**: **130 repetitions per model** (confirmatory), paired
+across conditions; no interim analysis, no optional stopping. Pilot reps
+(§10) are excluded.
+
+Justification (pre-registered power simulation,
+`analysis/power_simulation.py`, seed 20260715, worst-case Study 1
+effects, sign-flip permutation + Holm(4), success = p < .05 with the
+pre-registered direction; results in `results/power_simulation.csv`):
+minimum primary-test power at 50% effect attenuation is .30 at N = 30,
+.63 at N = 60, and **.92 at N = 130** — the smallest tested N meeting
+the frozen criterion (all primary tests ≥ .80 at 50% attenuation). The
+binding test is #4 (prev_rule_error, worst-case d ≈ 0.60 at full
+effect).
+
+근거(사전 등록 power simulation): 50% 효과 감쇠에서 1차 검정 최소
+power가 N=30에서 .30, N=60에서 .63, **N=130에서 .92** — 동결 기준(모든
+1차 검정 ≥ .80)을 충족하는 최소 시험 N. 결정적 검정은 4번
+(prev_rule_error, 최악 d ≈ 0.60)이다.
 
 ## 9. Provenance and secrets / 출처 관리·비밀 정보
 
@@ -327,13 +397,37 @@ are excluded.
 ## 10. Freeze sequence / 동결 절차
 
 1. **Now / 지금**: this v2.0 plan and all Study 1 exploratory results.
-2. **`pilot-freeze` tag**: Study 2 runner + parser + schedules + model
-   candidates + pilot rules + pinned library versions + the end-to-end
-   dry-run gate. / runner·파서·일정·모델 후보·파일럿 규칙·라이브러리
-   버전 고정·dry-run 게이트까지 동결.
-3. **Engineering pilot**: 3–5 reps/model, cost & parser verification
-   only; EXCLUDED from confirmatory data. / 공학 파일럿(확증 제외).
-4. Final choices (exact model IDs, N, API settings) fixed.
+2. **`pilot-freeze` tag** FREEZES the science: controller code and
+   parameters, parser, statistics code and success criteria, schedules,
+   stimuli, N (130), model candidate list, pilot rules, pinned library
+   versions, and the end-to-end dry-run gate. Nothing scientific changes
+   after this tag.
+   **`pilot-freeze` 태그가 과학을 동결한다**: 컨트롤러 코드·파라미터,
+   파서, 통계 코드·성공 기준, 일정, 자극, N(130), 모델 후보, 파일럿
+   규칙, 라이브러리 버전, dry-run 게이트. 이 태그 이후 과학적 내용은
+   바뀌지 않는다.
+3. **Engineering pilot**: 3–5 reps/model (separate pilot directory),
+   cost & parser & API verification only; EXCLUDED from confirmatory
+   data and from parameter selection.
+   공학 파일럿: 비용·파서·API 확인 전용, 확증 자료·파라미터 선택에서
+   제외.
+4. **Pre-declared engineering-only decisions after the pilot** (the
+   ONLY things the pilot may change) / 파일럿이 바꿀 수 있는 유일한
+   사전 선언 항목:
+   - **Model drop**: a candidate model is dropped iff pilot unparsable
+     rate > 20%, api_error rate > 10%, or projected confirmatory cost
+     for that model exceeds the available budget. Dropping a model
+     shrinks the roster, never changes the science.
+     모델 탈락 기준: 파일럿 파싱 불가율 > 20%, api_error율 > 10%, 또는
+     해당 모델 확증 비용이 가용 예산 초과. 탈락은 로스터만 줄인다.
+   - **Parser failure tolerance**: pilot mean unparsable rate ≤ 10% per
+     model is acceptable; exceeding it triggers a documented deviation
+     and a re-freeze cycle (parser fix → new pilot-freeze → new pilot),
+     never an in-place parser edit.
+     파서 허용률: 모델별 파싱 불가율 ≤ 10%. 초과 시 문서화된 deviation과
+     재동결 사이클로만 대응(즉석 수정 금지).
+   - Exact OpenAI model IDs pinned from the live model list.
+     OpenAI 모델 ID를 라이브 목록에서 고정.
 5. **`study2-freeze` tag**, externally timestamped (public repository
    push or OSF hash registration) BEFORE confirmatory generation.
    외부 타임스탬프 후에만 확증 생성.

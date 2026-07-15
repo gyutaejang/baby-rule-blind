@@ -20,10 +20,8 @@ CHECKS = [
     ("banned tokens / 금지어", [sys.executable, "scripts/check_banned_tokens.py"]),
     ("leak prevention / 누출 방지", [sys.executable, "-m", "tests.test_leak_prevention"]),
     ("design invariants / 설계 불변식", [sys.executable, "-m", "tests.test_design_invariants"]),
-    # TODO(pilot-freeze): add the Study 2 end-to-end dry run (mock API)
-    # once the runner exists — required before the pilot-freeze tag.
-    # TODO(pilot-freeze): runner가 생기면 Study 2 end-to-end dry run
-    # (mock API)을 추가 — pilot-freeze 태그 전 필수.
+    ("parser fixtures / 파서 fixture", [sys.executable, "-m", "tests.test_parser"]),
+    ("study2 dry run / 전 구간 dry run", [sys.executable, "-m", "tests.test_study2_dryrun"]),
 ]
 
 

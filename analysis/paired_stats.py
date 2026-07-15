@@ -195,6 +195,17 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
     # 1차 family (계획 v2.0 8절): 공동 주 조건 Full·WSLSBudgeted의 Pareto
     # 트레이드오프를 직접 검정하는 4개. Full vs YokedRandom은 기제 검증용
     # secondary family로 내린다.
+    # Pre-registered directions (plan v2.0 §8): sign of the expected
+    # mean_diff (cond_a - cond_b). Success for a primary test = Holm
+    # p < .05 AND observed direction matches. Two-sided tests are kept.
+    # 사전 등록 방향 (계획 v2.0 8절): 기대되는 mean_diff의 부호. 1차 검정
+    # 성공 = Holm p < .05 이고 관측 방향 일치. 검정 자체는 양측 유지.
+    primary_directions = {
+        ("RuleBlindFull", "RawLLM", "total_accuracy"): +1,
+        ("WSLSBudgeted", "RawLLM", "total_accuracy"): +1,
+        ("WSLSBudgeted", "RuleBlindFull", "total_accuracy"): +1,
+        ("RuleBlindFull", "WSLSBudgeted", "prev_rule_error_count"): -1,
+    }
     comparison_specs = [
         ("RuleBlindFull", "RawLLM", "total_accuracy", "primary"),
         ("WSLSBudgeted", "RawLLM", "total_accuracy", "primary"),
@@ -225,9 +236,45 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
 
     out: List[Dict[str, object]] = []
     for model in models:
+        # Endpoint-split headroom gate (plan v2.0 §8): accuracy tests
+        # always run; prev_rule_error tests run only if RawLLM mean
+        # prev_rule_error >= 3.0. A gated-out primary test is NOT run
+        # (Holm over the tests actually run) and the model cannot be
+        # declared "trade-off replicated".
+        # 지표별 headroom 게이트 (계획 v2.0 8절): 정확도 검정은 항상 실행;
+        # prev_rule_error 검정은 RawLLM 평균 >= 3.0일 때만. 게이트로
+        # 제외된 1차 검정은 실행하지 않으며(실행된 검정에 Holm) 해당
+        # 모델은 "trade-off replicated" 판정이 불가능하다.
+        raw_prev_values = [
+            float(r["prev_rule_error_count"])
+            for r in rows
+            if r["model"] == model and r["condition"] == "RawLLM"
+        ]
+        prev_headroom = sum(raw_prev_values) / len(raw_prev_values) if raw_prev_values else 0.0
+        prev_gate_open = prev_headroom >= 3.0
+
         results = []
         raw_pvalues: List[float] = []
         for cond_a, cond_b, metric, family in comparison_specs:
+            if metric == "prev_rule_error_count" and not prev_gate_open:
+                out.append(
+                    {
+                        "label": label,
+                        "model": model,
+                        "comparison": f"{cond_a} vs {cond_b}",
+                        "metric": metric,
+                        "family": family,
+                        "n_pairs": 0,
+                        "n_dropped": 0,
+                        "mean_diff": "",
+                        "ci_low": "",
+                        "ci_high": "",
+                        "rank_biserial": "",
+                        "p_raw": "",
+                        "p_holm": "not_tested_headroom",
+                    }
+                )
+                continue
             diffs, dropped = paired_values(rows, model, cond_a, cond_b, metric)
             p = paired_permutation_p(diffs)
             lo, hi = paired_bootstrap_ci(diffs)
@@ -253,15 +300,90 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
                 }
             )
         # Holm within each family, within each model, on FULL-PRECISION
-        # p-values (§11.5). / 모델별·family별, 원정밀도 p값에 Holm 보정.
+        # p-values. / 모델별·family별, 원정밀도 p값에 Holm 보정.
+        primary_pass: Dict[Tuple[str, str, str], bool] = {}
         for family in ("primary", "secondary", "reference"):
             idxs = [i for i, r in enumerate(results) if r["family"] == family]
             adjusted = holm_correct([raw_pvalues[i] for i in idxs])
             for i, adj in zip(idxs, adjusted):
-                # Permutation resolution floor: report "<.001" (§11.5).
-                # permutation 해상도 하한: "<.001"로 보고 (11.5절).
+                # Permutation resolution floor: report "<.001".
+                # permutation 해상도 하한: "<.001"로 보고.
                 results[i]["p_holm"] = "<.001" if adj < 0.001 else round(adj, 5)
+                if family == "primary":
+                    r = results[i]
+                    cond_a, _, cond_b = str(r["comparison"]).partition(" vs ")
+                    key = (cond_a, cond_b, str(r["metric"]))
+                    direction = primary_directions.get(key, 0)
+                    md = r["mean_diff"]
+                    directional_ok = isinstance(md, float) and md * direction > 0
+                    success = bool(adj < 0.05 and directional_ok)
+                    results[i]["success"] = "PASS" if success else "fail"
+                    primary_pass[key] = success
         out.extend(results)
+
+        # Per-model confirmatory verdict (plan v2.0 §8): "trade-off
+        # replicated" iff ALL FOUR primary tests pass; if the prev-rule
+        # gate was closed, at most "accuracy effects replicated".
+        # 모델별 확증 판정 (계획 v2.0 8절): 1차 4검정 전부 통과 시에만
+        # "trade-off replicated"; prev-rule 게이트가 닫혔으면 최대
+        # "accuracy effects replicated".
+        acc_keys = [k for k in primary_directions if k[2] == "total_accuracy"]
+        acc_all = all(primary_pass.get(k, False) for k in acc_keys)
+        if not prev_gate_open:
+            verdict = (
+                "accuracy_effects_replicated (prev-rule gate closed)"
+                if acc_all
+                else "not_replicated (prev-rule gate closed)"
+            )
+        else:
+            all_four = acc_all and primary_pass.get(
+                ("RuleBlindFull", "WSLSBudgeted", "prev_rule_error_count"), False
+            )
+            verdict = "trade_off_replicated" if all_four else "not_replicated"
+
+        # Non-inferiority (do-no-harm, plan v2.0 §8): 95% CI lower bound
+        # of the accuracy difference vs RawLLM > -0.02, computed
+        # automatically for both co-primary supervisors.
+        # 비열등성 (계획 v2.0 8절): RawLLM 대비 정확도 차이의 95% CI
+        # 하한 > -0.02. 두 공동 주 조건에 대해 자동 산출.
+        for supervisor in ("RuleBlindFull", "WSLSBudgeted"):
+            diffs, _ = paired_values(rows, model, supervisor, "RawLLM", "total_accuracy")
+            lo95, hi95 = paired_bootstrap_ci_level(diffs, level=0.95)
+            out.append(
+                {
+                    "label": label,
+                    "model": model,
+                    "comparison": f"{supervisor} vs RawLLM",
+                    "metric": "total_accuracy (non-inferiority, margin -0.02)",
+                    "family": "noninferiority",
+                    "n_pairs": len(diffs),
+                    "n_dropped": 0,
+                    "mean_diff": round(sum(diffs) / len(diffs), 4) if diffs else float("nan"),
+                    "ci_low": round(lo95, 4),
+                    "ci_high": round(hi95, 4),
+                    "rank_biserial": "",
+                    "p_raw": "",
+                    "p_holm": "noninferior" if lo95 > -0.02 else "not_established",
+                }
+            )
+
+        out.append(
+            {
+                "label": label,
+                "model": model,
+                "comparison": "(all four primary tests)",
+                "metric": "confirmatory verdict",
+                "family": "verdict",
+                "n_pairs": "",
+                "n_dropped": "",
+                "mean_diff": "",
+                "ci_low": "",
+                "ci_high": "",
+                "rank_biserial": "",
+                "p_raw": "",
+                "p_holm": verdict,
+            }
+        )
 
         # TrajectoryOnly equivalence (§11.5): declared iff the paired-
         # bootstrap 90% CI of the accuracy difference lies entirely
@@ -330,7 +452,7 @@ def main() -> None:
     columns = [
         "label", "model", "comparison", "metric", "family",
         "n_pairs", "n_dropped", "mean_diff", "ci_low", "ci_high",
-        "rank_biserial", "p_raw", "p_holm",
+        "rank_biserial", "p_raw", "p_holm", "success",
     ]
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns, extrasaction="ignore")
