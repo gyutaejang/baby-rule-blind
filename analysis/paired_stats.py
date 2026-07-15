@@ -184,30 +184,33 @@ def run_comparisons(summary_path: Path, label: str) -> List[Dict[str, object]]:
     rows = load_summary(summary_path)
     models = sorted({r["model"] for r in rows})
 
-    # (comparison, family): H1/H2 on primary metrics form the primary
-    # family; everything else is secondary (plan §7).
-    # (비교, family): 1차 지표에 대한 H1/H2가 primary family, 나머지는
-    # 전부 secondary (계획 7절).
-    # Primary family FIXED at four tests per model (Amendment B §11.5),
-    # explicitly including the currently-unfavorable Full-vs-Yoked
-    # prev_rule_error contrast.
-    # 1차 family는 모델당 4개 검정으로 고정(수정안 B 11.5절), 현재 불리한
-    # Full vs Yoked prev_rule_error 대비를 명시적으로 포함한다.
+    # Primary family (plan v2.0 §8): the CO-PRIMARY sparse supervisors
+    # Full and WSLSBudgeted, testing the Pareto trade-off directly.
+    # Four tests per model:
+    #   1. Full vs RawLLM — accuracy
+    #   2. WSLSBudgeted vs RawLLM — accuracy
+    #   3. WSLSBudgeted vs Full — accuracy
+    #   4. Full vs WSLSBudgeted — previous-rule-aligned error
+    # Full vs YokedRandom moves to the secondary (mechanism) family.
+    # 1차 family (계획 v2.0 8절): 공동 주 조건 Full·WSLSBudgeted의 Pareto
+    # 트레이드오프를 직접 검정하는 4개. Full vs YokedRandom은 기제 검증용
+    # secondary family로 내린다.
     comparison_specs = [
         ("RuleBlindFull", "RawLLM", "total_accuracy", "primary"),
-        ("RuleBlindFull", "RawLLM", "prev_rule_error_count", "primary"),
-        ("RuleBlindFull", "YokedRandom", "total_accuracy", "primary"),
-        ("RuleBlindFull", "YokedRandom", "prev_rule_error_count", "primary"),
+        ("WSLSBudgeted", "RawLLM", "total_accuracy", "primary"),
+        ("WSLSBudgeted", "RuleBlindFull", "total_accuracy", "primary"),
+        ("RuleBlindFull", "WSLSBudgeted", "prev_rule_error_count", "primary"),
+        # Mechanism family / 기제 검증 family.
+        ("RuleBlindFull", "YokedRandom", "total_accuracy", "secondary"),
+        ("RuleBlindFull", "YokedRandom", "prev_rule_error_count", "secondary"),
         ("RuleBlindFull", "NoVeto", "total_accuracy", "secondary"),
         ("RuleBlindFull", "NoVeto", "prev_rule_error_count", "secondary"),
-        # Information-matched baseline (Amendment B §11.2/§11.5).
-        # 정보량 동일 기준선 (수정안 B 11.2/11.5절).
-        ("RuleBlindFull", "WSLSBudgeted", "total_accuracy", "secondary"),
-        ("RuleBlindFull", "WSLSBudgeted", "prev_rule_error_count", "secondary"),
+        ("RuleBlindFull", "RawLLM", "prev_rule_error_count", "secondary"),
+        ("WSLSBudgeted", "RawLLM", "prev_rule_error_count", "secondary"),
         ("TrajectoryOnly", "RawLLM", "total_accuracy", "secondary"),
         ("TrajectoryOnly", "RawLLM", "prev_rule_error_count", "secondary"),
-        # Oracle-assisted policy reference — NOT a ceiling (§11.6).
-        # oracle 보조 정책 참조 — 상한선 아님 (11.6절).
+        # Oracle-assisted policy reference — NOT a ceiling (v2.0 §3).
+        # oracle 보조 정책 참조 — 상한선 아님 (v2.0 3절).
         ("OracleFull", "RawLLM", "total_accuracy", "reference"),
         ("OracleFull", "RawLLM", "prev_rule_error_count", "reference"),
         # NOTE: productive_rate is intentionally NOT a paired comparison

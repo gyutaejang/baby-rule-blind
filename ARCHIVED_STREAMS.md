@@ -29,14 +29,16 @@ These streams never serve as confirmatory evidence.
 
 ## Withdrawn manuscript reference / 철회 원고 참조
 
-The corrected study references the withdrawn submission by the ID on the
-submission PDF: **COGSYS-S-26-00464**. If the Editorial Manager display
-ID differs (e.g., a D-prefixed document number), record the confirmed EM
-ID here once verified from the EM screen:
+The withdrawn submission carries two identifiers, recorded here by role.
+The relationship between the S- and D-prefixed numbering schemes is NOT
+assumed; it will be stated only if confirmed by the journal.
 
-교정 연구는 철회 제출물을 제출 PDF상의 ID **COGSYS-S-26-00464**로
-인용한다. Editorial Manager 표시 ID가 다른 경우(D- 접두 문서 번호 등),
-EM 화면에서 확인되는 대로 아래에 기록한다:
+철회 제출물에는 두 개의 식별 번호가 있으며 역할별로 기록한다. S-/D- 접두
+체계의 관계는 추정하지 않으며, 저널이 확인해 줄 때에만 기술한다.
 
-- EM display ID / EM 표시 ID: (to be confirmed / 확인 예정)
-- Withdrawal request reference / 철회 요청 접수번호: 260715-008289 (Elsevier Support, 2026-07-15)
+- Submission PDF / reference ID / 제출 PDF·인용용 ID: **COGSYS-S-26-00464**
+- Editorial Manager display manuscript number / EM 표시 원고 번호
+  (confirmed from the EM screen, 2026-07-15 / EM 화면에서 확인):
+  **COGSYS-D-26-00370**
+- Withdrawal request reference / 철회 요청 접수번호: 260715-008289
+  (Elsevier Support, 2026-07-15)

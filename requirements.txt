@@ -4,7 +4,13 @@
 # 본 프로젝트의 replay·컨트롤러·분석 코드는 재현성을 위해 의도적으로
 # Python 표준 라이브러리만 사용한다. Windows의 CPython 3.14에서 검증됨.
 #
-# Study 2 stream GENERATION (not replay/analysis) will additionally need:
-# Study 2 스트림 '생성'(replay·분석 아님)에만 추가로 필요:
-#   anthropic   # pinned at generation time / 생성 시점에 버전 고정
-#   openai      # pinned at generation time / 생성 시점에 버전 고정
+# Study 2 stream GENERATION (not replay/analysis) will additionally need
+# the packages below. Exact versions MUST be pinned (== syntax) at the
+# pilot-freeze tag, before any API call — see plan v2.0 §10.
+# Study 2 스트림 '생성'(replay·분석 아님)에만 아래 패키지가 추가로 필요.
+# 정확한 버전은 API 호출 전 pilot-freeze 태그 시점에 == 구문으로 고정한다
+# (계획 v2.0 10절).
+#   anthropic==<pin at pilot-freeze / pilot-freeze에서 고정>
+#   openai==<pin at pilot-freeze>
+#   python-dotenv==<pin at pilot-freeze>
+

@@ -18,13 +18,16 @@ Frozen generation rules (§11.3) / 동결된 생성 규칙 (11.3절):
   block may be 4–8 by the partition rule below.
   블록 길이는 {5,6,7}에서 균등 추출; 아래 분할 규칙에 따라 마지막 블록은
   4–8 허용.
-- Partition rule: draw lengths while the remaining trials > 8; then, if
-  the remainder is 4–8, it becomes the final block; if the remainder is
-  1–3, it is added to the previously drawn block (making it at most
-  7 + 3 = 10 is impossible since remainder <= 3 only occurs when the
-  previous draw left <= 8; the merged block is at most 8).
-  분할 규칙: 남은 trial이 8을 초과하는 동안 길이를 추출; 남은 수가 4–8이면
-  마지막 블록으로 하고, 1–3이면 직전 블록에 합친다(합쳐진 블록은 최대 8).
+- Partition rule (ALL blocks guaranteed 4–8): draw lengths while the
+  remaining trials > 8; if the remainder is 4–8 it becomes the final
+  block; if the remainder is 1–3, it is pooled with the previously drawn
+  block and the pooled total T (6–10) is emitted as one block when
+  T <= 8, otherwise as two blocks of ceil(T/2) and floor(T/2) (9 -> 5+4,
+  10 -> 5+5).
+  분할 규칙 (모든 블록 4–8 보장): 남은 trial이 8을 초과하는 동안 길이를
+  추출; 남은 수가 4–8이면 마지막 블록으로 한다; 1–3이면 직전 블록과
+  합쳐 합계 T(6–10)를 만들고, T <= 8이면 한 블록, 아니면 ceil(T/2)와
+  floor(T/2)의 두 블록으로 낸다 (9 -> 5+4, 10 -> 5+5).
 - First rule uniform over {color, shape, number}; each subsequent rule
   uniform over the other two (no immediate repeat).
   첫 규칙은 셋 중 균등, 이후 규칙은 나머지 둘 중 균등(연속 반복 없음).
@@ -62,7 +65,8 @@ MASTER_SEED = 20260715
 
 
 def partition_blocks(rng: random.Random) -> List[int]:
-    """Frozen partition of 36 trials into blocks. / 36 trial의 동결된 분할."""
+    """Frozen partition of 36 trials into blocks, ALL of length 4–8.
+    36 trial의 동결된 분할 — 모든 블록 길이 4–8 보장."""
     lengths: List[int] = []
     remaining = N_TRIALS
     while remaining > 8:
@@ -72,10 +76,21 @@ def partition_blocks(rng: random.Random) -> List[int]:
     if remaining >= 4:
         lengths.append(remaining)
     else:
-        # Remainder 1–3 merges into the previous block (result <= 8).
-        # 남은 1–3은 직전 블록에 합친다 (결과는 8 이하).
-        lengths[-1] += remaining
+        # Remainder 1–3: pool with the previous block; emit the pooled
+        # total T (6–10) as one block if T <= 8, else split into
+        # ceil(T/2) + floor(T/2) (9 -> 5+4, 10 -> 5+5). Every emitted
+        # block stays within 4–8.
+        # 남은 1–3: 직전 블록과 합쳐 합계 T(6–10)를 만들고, T <= 8이면 한
+        # 블록, 아니면 ceil(T/2)+floor(T/2)로 분할 (9 -> 5+4, 10 -> 5+5).
+        # 모든 블록이 4–8 범위를 유지한다.
+        pooled = lengths.pop() + remaining
+        if pooled <= 8:
+            lengths.append(pooled)
+        else:
+            lengths.append((pooled + 1) // 2)
+            lengths.append(pooled // 2)
     assert sum(lengths) == N_TRIALS
+    assert all(4 <= length <= 8 for length in lengths), lengths
     return lengths
 
 
