@@ -1,0 +1,13 @@
+model,visible_attribute,n_trials,attribute_levels,raw_choice_entropy_bits,choice_attribute_mi_bits,choice_attribute_mi_bias_corrected_bits,fraction_choice_entropy_explained
+claude-opus-4-8,color,4680,4,-0.0,0.0,0.0,0.0
+claude-opus-4-8,shape,4680,4,-0.0,0.0,0.0,0.0
+claude-opus-4-8,number,4680,4,-0.0,0.0,0.0,0.0
+claude-sonnet-5,color,4656,4,0.052753,0.011678,0.010749,0.203757
+claude-sonnet-5,shape,4656,4,0.052753,0.011888,0.010958,0.207727
+claude-sonnet-5,number,4656,4,0.052753,0.011721,0.010792,0.20457
+gpt-5.5-2026-04-23,color,4680,4,0.64148,0.013634,0.012709,0.019813
+gpt-5.5-2026-04-23,shape,4680,4,0.64148,0.010965,0.01004,0.015651
+gpt-5.5-2026-04-23,number,4680,4,0.64148,0.015599,0.014675,0.022876
+gpt-5.4-mini-2026-03-17,color,4680,4,1.117567,0.035014,0.034089,0.030503
+gpt-5.4-mini-2026-03-17,shape,4680,4,1.117567,0.03939,0.038465,0.034419
+gpt-5.4-mini-2026-03-17,number,4680,4,1.117567,0.007562,0.006637,0.005939

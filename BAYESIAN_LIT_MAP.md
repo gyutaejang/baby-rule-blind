@@ -378,9 +378,9 @@ explicit about this boundary or a reviewer will catch it.
 ### E.1. Output entropy as a model × prompt behavioral phenotype
 
 The observed RawLLM distribution over {color, shape, number} is best called
-an **output-choice phenotype under the frozen prompt and decoding protocol**.
-It is not a direct readout of internal uncertainty, a stable personality-like
-trait, or evidence of ADHD/ASD-like cognition. Prompt-sensitivity work and the
+an **output-choice distribution under the frozen prompt and decoding protocol**.
+It is not a direct readout of internal uncertainty or a stable model-intrinsic
+cognitive trait. Prompt-sensitivity work and the
 modality/prompt effects in Hao et al. make the conditioning explicit:
 
 `observed choice distribution = f(model, prompt, decoding, stimulus set)`.

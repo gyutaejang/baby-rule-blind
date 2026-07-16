@@ -1,0 +1,5 @@
+model,n_reps,raw_entropy_mean_bits,ruleblind_entropy_mean_bits,entropy_gain_bits,accuracy_gain_mean,accuracy_gain_ci_low,accuracy_gain_ci_high,pearson_raw_entropy_vs_accuracy_gain,spearman_raw_entropy_vs_accuracy_gain,pearson_raw_entropy_vs_raw_accuracy,target_mi_gain_bits,choice_js_raw_to_ruleblind_bits
+claude-opus-4-8,130,0.0,0.912158,0.912158,0.124145,0.115598,0.132692,,,,0.120295,0.120137
+claude-sonnet-5,130,0.037688,0.933589,0.895901,0.125,0.116453,0.133547,0.048363,0.0128,-0.120499,0.117911,0.109684
+gpt-5.5-2026-04-23,130,0.597346,1.184544,0.587198,0.125214,0.116667,0.133974,0.092935,0.074715,0.046419,0.07298,0.053035
+gpt-5.4-mini-2026-03-17,130,1.071067,1.412488,0.341421,0.116026,0.10641,0.125005,-0.049625,0.057044,0.078656,0.050094,0.03929

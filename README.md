@@ -23,6 +23,9 @@ ARCHIVED_STREAMS.md 참조)의 교정 재설계: WCST형 규칙 전환 과제에
   동결된 분석계획(조건, 역할, 지표, 통계). 가장 먼저 읽을 것.
 - [`DEVIATIONS.md`](DEVIATIONS.md) — log of any post-freeze changes.
   동결 이후 변경 기록.
+- [`EXPLORATORY_INFORMATION_PROCESSING.md`](EXPLORATORY_INFORMATION_PROCESSING.md)
+  — post-hoc information-processing analysis of the completed Study 2 replay;
+  kept separate from the frozen confirmatory analysis.
 
 ## Planned layout / 예정 구조
 
