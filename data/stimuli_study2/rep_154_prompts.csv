@@ -1,0 +1,181 @@
+trial_number,color,number,shape,prompt
+1,blue,1,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+2,green,3,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 star(s).
+Answer with just the dimension name.
+Your choice:"
+3,yellow,4,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 4 circle(s).
+Answer with just the dimension name.
+Your choice:"
+4,red,2,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 2 circle(s).
+Answer with just the dimension name.
+Your choice:"
+5,yellow,3,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 3 square(s).
+Answer with just the dimension name.
+Your choice:"
+6,red,4,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 4 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+7,blue,4,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 4 circle(s).
+Answer with just the dimension name.
+Your choice:"
+8,yellow,1,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 1 star(s).
+Answer with just the dimension name.
+Your choice:"
+9,green,4,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 4 star(s).
+Answer with just the dimension name.
+Your choice:"
+10,blue,1,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+11,red,1,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 square(s).
+Answer with just the dimension name.
+Your choice:"
+12,red,1,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 circle(s).
+Answer with just the dimension name.
+Your choice:"
+13,blue,1,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 star(s).
+Answer with just the dimension name.
+Your choice:"
+14,blue,2,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 2 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+15,green,1,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 1 square(s).
+Answer with just the dimension name.
+Your choice:"
+16,green,1,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 1 circle(s).
+Answer with just the dimension name.
+Your choice:"
+17,green,2,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 2 star(s).
+Answer with just the dimension name.
+Your choice:"
+18,green,4,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 4 circle(s).
+Answer with just the dimension name.
+Your choice:"
+19,blue,1,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 circle(s).
+Answer with just the dimension name.
+Your choice:"
+20,red,3,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 3 square(s).
+Answer with just the dimension name.
+Your choice:"
+21,blue,2,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 2 star(s).
+Answer with just the dimension name.
+Your choice:"
+22,blue,2,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 2 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+23,red,4,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 4 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+24,red,2,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 2 square(s).
+Answer with just the dimension name.
+Your choice:"
+25,red,1,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 1 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+26,yellow,2,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: yellow 2 circle(s).
+Answer with just the dimension name.
+Your choice:"
+27,red,3,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 3 circle(s).
+Answer with just the dimension name.
+Your choice:"
+28,red,4,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 4 circle(s).
+Answer with just the dimension name.
+Your choice:"
+29,blue,1,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: blue 1 star(s).
+Answer with just the dimension name.
+Your choice:"
+30,green,2,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 2 circle(s).
+Answer with just the dimension name.
+Your choice:"
+31,red,3,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 3 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+32,green,3,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+33,green,3,square,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 3 square(s).
+Answer with just the dimension name.
+Your choice:"
+34,red,4,circle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 4 circle(s).
+Answer with just the dimension name.
+Your choice:"
+35,red,4,triangle,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: red 4 triangle(s).
+Answer with just the dimension name.
+Your choice:"
+36,green,4,star,"You are sorting cards. Each card has a color, shape, and number.
+Sort this card by choosing one dimension: color, shape, or number.
+Card: green 4 star(s).
+Answer with just the dimension name.
+Your choice:"
