@@ -24,6 +24,7 @@ CHECKS = [
     ("banned tokens / 금지어", [sys.executable, "scripts/check_banned_tokens.py"]),
     ("leak prevention / 누출 방지", [sys.executable, "-m", "tests.test_leak_prevention"]),
     ("design invariants / 설계 불변식", [sys.executable, "-m", "tests.test_design_invariants"]),
+    ("WCD-minimal policy / WCD-minimal 정책", [sys.executable, "-m", "tests.test_wcd_minimal"]),
     ("parser fixtures / 파서 fixture", [sys.executable, "-m", "tests.test_parser"]),
     ("study2 dry run / 전 구간 dry run", [sys.executable, "-m", "tests.test_study2_dryrun"]),
 ]
