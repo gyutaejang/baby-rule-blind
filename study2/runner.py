@@ -197,11 +197,13 @@ def write_repetition(
             return str(path)
 
     entry = {
+        "manifest_schema_version": "2",
         "model": model_label,
         "rep": str(rep_index),
         "public_path": _portable(public_path),
         "public_sha256": sha256_of(public_path),
         "attempts_path": _portable(attempts_path),
+        "attempts_sha256": sha256_of(attempts_path),
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
     }
     entry.update(manifest_extra)
@@ -278,6 +280,7 @@ def main() -> None:
         # 이 실행의 모든 호출에 쓰인 동결 생성 설정 — manifest만으로 감사
         # 가능 (검토 P1 반영).
         "generation_config": json.dumps(generation_config, sort_keys=True),
+        "generation_config_source": "runtime",
     }
 
     # Pre-flight overwrite check BEFORE any API call, so a collision

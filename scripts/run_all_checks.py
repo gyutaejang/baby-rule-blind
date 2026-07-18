@@ -17,6 +17,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 CHECKS = [
+    (
+        "repository security / 저장소 보안",
+        [sys.executable, "scripts/verify_repository_security.py"],
+    ),
     ("banned tokens / 금지어", [sys.executable, "scripts/check_banned_tokens.py"]),
     ("leak prevention / 누출 방지", [sys.executable, "-m", "tests.test_leak_prevention"]),
     ("design invariants / 설계 불변식", [sys.executable, "-m", "tests.test_design_invariants"]),

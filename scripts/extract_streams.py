@@ -25,20 +25,20 @@ data/manifest.csv에 기록한다.
 
 Usage / 사용:
     python scripts/extract_streams.py [source_dir]
-    (default source_dir / 기본 원본 경로:
-     C:/Users/mrgut/Desktop/brain like/outputs_v2/zenodo_upload)
+    source_dir may also be supplied through ARCHIVED_SOURCE_DIR.
+    source_dir는 ARCHIVED_SOURCE_DIR 환경변수로도 지정할 수 있다.
 """
 
 from __future__ import annotations
 
 import csv
 import hashlib
+import os
 import sys
 from pathlib import Path
 from typing import Dict, List
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SOURCE = Path(r"C:\Users\mrgut\Desktop\brain like\outputs_v2\zenodo_upload")
 
 PUBLIC_DIR = PROJECT_ROOT / "data" / "public"
 GT_DIR = PROJECT_ROOT / "data" / "ground_truth"
@@ -97,9 +97,15 @@ def extract_schedule(rows: List[Dict[str, str]]) -> List[Dict[str, str]]:
 
 
 def main() -> None:
-    source_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SOURCE
+    source_arg = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("ARCHIVED_SOURCE_DIR")
+    if not source_arg:
+        raise SystemExit(
+            "source dir required: pass it as the first argument or set "
+            "ARCHIVED_SOURCE_DIR / 원본 경로를 인자 또는 환경변수로 지정하세요"
+        )
+    source_dir = Path(source_arg).expanduser()
     if not source_dir.exists():
-        raise SystemExit(f"source dir not found / 원본 경로 없음: {source_dir}")
+        raise SystemExit("source dir not found / 원본 경로가 없습니다")
 
     manifest: List[Dict[str, str]] = []
     reference_schedule: List[Dict[str, str]] | None = None
@@ -143,7 +149,10 @@ def main() -> None:
             manifest.append(
                 {
                     "role": "source",
-                    "path": str(src),
+                    # Keep public provenance portable and free of workstation
+                    # usernames. The content hash remains the source identity.
+                    # 공개 manifest에는 개인 PC 절대경로 대신 논리 경로를 기록한다.
+                    "path": str(Path("external_source") / src.name),
                     "sha256": sha256_of(src),
                 }
             )

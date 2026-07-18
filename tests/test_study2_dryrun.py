@@ -37,7 +37,7 @@ from oracle import OracleFullController  # noqa: E402
 from replay import load_public_stream, run_replay, summarize  # noqa: E402
 from scripts.generate_schedules import generate_schedule  # noqa: E402
 from scripts.generate_stimuli import generate_stimuli  # noqa: E402
-from study2.runner import generate_repetition, write_repetition  # noqa: E402
+from study2.runner import generate_repetition, sha256_of, write_repetition  # noqa: E402
 
 REP = 1
 
@@ -156,7 +156,17 @@ def test_end_to_end_dry_run() -> None:
 
     # Write outputs + manifest. / 산출물·manifest 기록.
     entry = write_repetition(
-        "mock-model", REP, rows, attempts, tmp / "out", {"provider": "mock", "pilot": "1"}
+        "mock-model",
+        REP,
+        rows,
+        attempts,
+        tmp / "out",
+        {
+            "provider": "mock",
+            "pilot": "1",
+            "generation_config": json.dumps({"mock": True}, sort_keys=True),
+            "generation_config_source": "runtime",
+        },
     )
     public_path = PROJECT_ROOT / entry["public_path"] if not Path(entry["public_path"]).is_absolute() else Path(entry["public_path"])
     # write_repetition stores project-relative paths; resolve from tmp.
@@ -165,6 +175,10 @@ def test_end_to_end_dry_run() -> None:
     manifest_path = tmp / "out" / "mock-model" / "generation_manifest.jsonl"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8").splitlines()[0])
     assert manifest["public_sha256"] == entry["public_sha256"]
+    attempts_path = tmp / "out" / "mock-model" / f"rep_{REP:02d}_attempts.csv"
+    assert manifest["attempts_sha256"] == sha256_of(attempts_path)
+    assert manifest["generation_config_source"] == "runtime"
+    assert manifest["manifest_schema_version"] == "2"
 
     # Replay the generated stream through all eight conditions with the
     # per-repetition evaluator; budget and structure invariants hold.

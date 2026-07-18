@@ -348,11 +348,11 @@ pre-registered directions and success criteria**:
   게이트가 닫히면 검정 4는 실행하지 않고(실행된 3개에 Holm) 최대
   "accuracy effects replicated"까지만 판정한다.
 - **Generation-transfer label (pre-registered, descriptive)** / 세대
-  전이 라벨(사전 등록, 기술적): with 5 models, trade-off replicated in
-  ≥4 → "broad transfer"; 2–3 → "partial transfer"; ≤1 → "no transfer".
+  전이 라벨(사전 등록, 기술적): with 4 models, trade-off replicated in
+  ≥3 → "broad transfer"; 2 → "partial transfer"; ≤1 → "no transfer".
   Per-model results are always reported in full; the label never
   replaces them.
-  5개 모델 중 ≥4 재현 = broad, 2–3 = partial, ≤1 = no transfer. 모델별
+  4개 모델 중 ≥3 재현 = broad, 2 = partial, ≤1 = no transfer. 모델별
   결과는 항상 전부 보고하며 라벨이 이를 대체하지 않는다.
 
 **Secondary (mechanism) family / 2차(기제) family**: Full vs YokedRandom
