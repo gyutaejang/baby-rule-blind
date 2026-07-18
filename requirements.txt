@@ -12,6 +12,6 @@
 # 버전은 pilot-freeze 태그에서 고정(계획 v2.0 10절). .env 로드는 표준
 # 라이브러리 로더(study2/clients.py)를 사용하므로 python-dotenv는
 # 의존성이 아니다.
-anthropic==0.116.0
+anthropic==0.117.0
 openai==2.45.0
 
