@@ -39,7 +39,11 @@ def main() -> int:
             failed += 1
         print(f"[{status}] {name}")
     if failed:
-        print(f"\n{failed} gate(s) failed — results MUST NOT be reported / 게이트 실패 — 결과 보고 금지")
+        # ASCII only: an em-dash here crashes on cp949 consoles and the
+        # crash masks the failure it is trying to report (2026-07-18).
+        # ASCII 전용: em-dash는 cp949 콘솔에서 크래시를 일으켜 보고하려던
+        # 실패 자체를 가린다 (2026-07-18).
+        print(f"\n{failed} gate(s) failed - results MUST NOT be reported / 게이트 실패 - 결과 보고 금지")
         return 1
     print("\nall gates passed / 전체 게이트 통과")
     return 0

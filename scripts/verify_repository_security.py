@@ -23,7 +23,14 @@ from study2.clients import ANTHROPIC_CONFIGS, OPENAI_CONFIGS  # noqa: E402
 
 MAX_BLOB_SIZE = 10_000_000
 ALLOWED_TRACKED_ENV = {".env.example"}
-EXPECTED_STUDY2_REPS = 130
+# 260 = Study 2 confirmatory (reps 1-130, study2-freeze) + Study 2b
+# confirmatory (reps 131-260, study2b-freeze; STUDY2B_PLAN.md §4). Both
+# generations share one manifest per model; every rep must appear exactly
+# once with the frozen generation config.
+# 260 = Study 2 확증 (rep 1-130) + Study 2b 확증 (rep 131-260). 두 생성이
+# 모델당 하나의 manifest를 공유하며, 모든 rep은 동결 생성 설정과 함께
+# 정확히 한 번씩 나타나야 한다.
+EXPECTED_STUDY2_REPS = 260
 
 SECRET_PATTERNS = {
     "openai_api_key": re.compile(rb"\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b"),
