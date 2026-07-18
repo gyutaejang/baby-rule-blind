@@ -1,0 +1,37 @@
+label,model,comparison,metric,family,n_pairs,n_dropped,mean_diff,ci_low,ci_high,rank_biserial,p_raw,p_holm,success
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RawLLM,prev_rule_error_count,primary,130,0,-5.2308,-5.4846,-4.9615,-1.0,0.0001,<.001,PASS
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RawLLM,total_accuracy,secondary,130,0,0.1547,0.1464,0.163,1.0,0.0001,<.001,PASS
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs WSLSBudgeted,prev_rule_error_count,secondary,130,0,0.0,0.0,0.0,0.0,1.0,1.0,
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RuleBlindFull,total_accuracy,secondary,130,0,0.0209,0.0098,0.0321,0.3829,0.0006,0.0012,
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RuleBlindFull,prev_rule_error_count,exploratory,130,0,-0.7846,-1.1923,-0.3923,-0.3706,0.0004,<.001,
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RuleBlindFull,"prev_rule_error_count (non-inferiority, Delta 1.9917)",noninferiority,130,0,-0.7846,-1.1923,-0.3923,,,noninferior,
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RawLLM,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.1547,0.1464,0.163,,,noninferior,
+study2b_confirmatory,claude-opus-4-8,WCDMinimal vs RuleBlindFull,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.0209,0.0098,0.0321,,,noninferior,
+study2b_confirmatory,claude-opus-4-8,(P1 x S1 interpretation map),confirmatory verdict,verdict,,,,,,,,minimal_sufficient_stack_unnecessary,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RawLLM,prev_rule_error_count,primary,130,0,-4.9769,-5.2769,-4.6538,-0.9984,0.0001,<.001,PASS
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RawLLM,total_accuracy,secondary,130,0,0.1547,0.1464,0.163,1.0,0.0001,<.001,PASS
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs WSLSBudgeted,prev_rule_error_count,secondary,130,0,0.0,0.0,0.0,0.0,1.0,1.0,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RuleBlindFull,total_accuracy,secondary,130,0,0.0207,0.0094,0.0318,0.3786,0.0007,0.0014,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RuleBlindFull,prev_rule_error_count,exploratory,130,0,-0.5385,-0.9308,-0.1308,-0.2646,0.0126,0.0126,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RuleBlindFull,"prev_rule_error_count (non-inferiority, Delta 1.9917)",noninferiority,130,0,-0.5385,-0.9308,-0.1308,,,noninferior,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RawLLM,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.1547,0.1464,0.163,,,noninferior,
+study2b_confirmatory,claude-sonnet-5,WCDMinimal vs RuleBlindFull,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.0207,0.0094,0.0318,,,noninferior,
+study2b_confirmatory,claude-sonnet-5,(P1 x S1 interpretation map),confirmatory verdict,verdict,,,,,,,,minimal_sufficient_stack_unnecessary,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RawLLM,prev_rule_error_count,primary,130,0,-3.7308,-4.1231,-3.3231,-0.9638,0.0001,<.001,PASS
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RawLLM,total_accuracy,secondary,130,0,0.1573,0.1491,0.1654,1.0,0.0001,<.001,PASS
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs WSLSBudgeted,prev_rule_error_count,secondary,130,0,0.0,0.0,0.0,0.0,1.0,1.0,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RuleBlindFull,total_accuracy,secondary,130,0,0.0308,0.0199,0.0417,0.5372,0.0001,<.001,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RuleBlindFull,prev_rule_error_count,exploratory,130,0,0.0692,-0.3615,0.4923,0.0201,0.78022,0.78022,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RuleBlindFull,"prev_rule_error_count (non-inferiority, Delta 1.9917)",noninferiority,130,0,0.0692,-0.3615,0.4923,,,noninferior,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RawLLM,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.1573,0.1491,0.1654,,,noninferior,
+study2b_confirmatory,gpt-5.5-2026-04-23,WCDMinimal vs RuleBlindFull,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.0308,0.0199,0.0417,,,noninferior,
+study2b_confirmatory,gpt-5.5-2026-04-23,(P1 x S1 interpretation map),confirmatory verdict,verdict,,,,,,,,minimal_sufficient_stack_unnecessary,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RawLLM,prev_rule_error_count,primary,130,0,-2.0077,-2.3231,-1.6846,-0.9423,0.0001,<.001,PASS
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RawLLM,total_accuracy,secondary,130,0,0.1656,0.1571,0.1739,1.0,0.0001,<.001,PASS
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs WSLSBudgeted,prev_rule_error_count,secondary,130,0,0.0,0.0,0.0,0.0,1.0,1.0,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RuleBlindFull,total_accuracy,secondary,130,0,0.047,0.0359,0.0579,0.731,0.0001,<.001,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RuleBlindFull,prev_rule_error_count,exploratory,130,0,0.1,-0.2769,0.4769,0.0889,0.63394,0.63394,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RuleBlindFull,"prev_rule_error_count (non-inferiority, Delta 1.9917)",noninferiority,130,0,0.1,-0.2769,0.4769,,,noninferior,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RawLLM,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.1656,0.1571,0.1739,,,noninferior,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,WCDMinimal vs RuleBlindFull,"total_accuracy (do-no-harm, margin -0.02)",noninferiority,130,0,0.047,0.0359,0.0579,,,noninferior,
+study2b_confirmatory,gpt-5.4-mini-2026-03-17,(P1 x S1 interpretation map),confirmatory verdict,verdict,,,,,,,,minimal_sufficient_stack_unnecessary,
