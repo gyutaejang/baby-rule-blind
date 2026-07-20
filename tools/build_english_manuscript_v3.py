@@ -127,6 +127,10 @@ def add_table(doc, header, rows):
         cell = table.rows[0].cells[j]
         fill(cell, text, bold=True)
         set_cell_borders(cell, top="12", bottom="6")
+    # repeat the header row when a long table splits across pages
+    header_tr_pr = table.rows[0]._tr.get_or_add_trPr()
+    tbl_header = OxmlElement("w:tblHeader")
+    header_tr_pr.append(tbl_header)
     for i, row in enumerate(rows, start=1):
         last = i == len(rows)
         for j, text in enumerate(row):

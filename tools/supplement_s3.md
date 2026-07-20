@@ -126,7 +126,7 @@ The same script also fixes the non-inferiority margin anchor from its own output
 
 The full 48-configuration grid (4 decay values x 4 switch margins x 3 wait thresholds; score clip fixed at 5.0 and budget fixed at 9 throughout) is reproduced below, with pooled means over the 60 archived streams. Columns: mean accuracy, mean previous-rule-aligned errors per repetition, mean interventions per repetition, and maximum interventions in any single repetition.
 
-| decay | switch_margin | wait_threshold | mean_accuracy | mean_prev_rule_error | mean_interventions | max_interventions |
+| Decay | Margin | Wait | Accuracy | Prev.-rule errors | Mean interv. | Max interv. |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0.5 | 0.0 | 1 | 0.5523 | 8.5667 | 9.0 | 9.0 |
 | 0.5 | 0.0 | 2 | 0.5102 | 10.55 | 9.0 | 9.0 |
