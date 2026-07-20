@@ -26,3 +26,13 @@ service-account*.json
 # OS
 Thumbs.db
 .DS_Store
+
+# Submission package and its builder contain author-identifying details
+# (name, email, affiliation) — never commit to the public repository.
+# 제출 패키지·빌더에는 저자 신원 정보가 있으므로 공개 리포에 커밋 금지.
+manuscript/submission_package/
+tools/build_submission_package.py
+
+# Local working-draft docx exports (generated from the markdown source)
+manuscript/*.docx
+*.docx
