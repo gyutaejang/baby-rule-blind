@@ -295,7 +295,7 @@ The author declares that they have no known competing financial interests or per
 
 ## Data availability
 
-All public response streams, ground-truth schedules, controller and replay code, frozen analysis code and freeze tags, statistics tables, and SHA-256 manifests are available in the study repository; an anonymized link is provided for review, and a public archive will be linked upon acceptance.
+All public response streams, ground-truth schedules, controller and replay code, frozen analysis code, statistics tables, and SHA-256 manifests are available in the study repository. An anonymized mirror for review is available at https://anonymous.4open.science/r/baby-rule-blind-D7C4/ (browsable file contents and full-repository download). The mirror displays file contents only; commit history and the externally timestamped freeze tags become verifiable in the de-anonymized public repository linked upon acceptance.
 
 ## Declaration of generative AI and AI-assisted technologies in the writing process
 
