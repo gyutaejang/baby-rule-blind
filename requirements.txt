@@ -13,5 +13,5 @@
 # 라이브러리 로더(study2/clients.py)를 사용하므로 python-dotenv는
 # 의존성이 아니다.
 anthropic==0.116.0
-openai==2.45.0
+openai==2.46.0
 
