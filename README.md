@@ -26,6 +26,36 @@ ARCHIVED_STREAMS.md 참조)의 교정 재설계: WCST형 규칙 전환 과제에
 - [`EXPLORATORY_INFORMATION_PROCESSING.md`](EXPLORATORY_INFORMATION_PROCESSING.md)
   — post-hoc information-processing analysis of the completed Study 2 replay;
   kept separate from the frozen confirmatory analysis.
+- [`STUDY2B_PLAN.md`](STUDY2B_PLAN.md) — Study 2b (WCD-minimal) confirmatory
+  plan; binding as of the `study2b-freeze` tag (see Freeze record below).
+  Study 2b(WCD-minimal) 확증 계획; `study2b-freeze` 태그 시점부터 구속력
+  (아래 동결 기록 참조).
+
+## Freeze record / 동결 기록
+
+Confirmatory claims are licensed by externally timestamped git tags, not
+by document headers. 확증 주장의 근거는 문서 머리말이 아니라 외부
+타임스탬프가 찍힌 git 태그다.
+
+| Tag | Commit | Date | Scope / 범위 |
+|---|---|---|---|
+| `plan-freeze-v1.0` | — | pre-Study 2 | Analysis plan (`ANALYSIS_PLAN.md`) / 분석계획 동결 |
+| `study2-freeze` | `43f6659` | 2026-07-15 | Study 2 confirmatory design, conditions, statistics / Study 2 확증 설계 |
+| `study2b-freeze` | `0649cbc` | 2026-07-18 | Study 2b WCD-minimal spec with calibrated parameters (decay = 0.5, switch_margin = 0.0, wait_threshold = 1), S1 non-inferiority margin Δ = 1.9917, hypothesis hierarchy and interpretation map — fixed **before** generation of confirmatory repetitions 131–260 / Study 2b 사양·보정 파라미터·가설 위계·해석 지도, 확증 반복 131–260 생성 **이전** 고정 |
+
+Note: the status line at the top of `STUDY2B_PLAN.md` still reads
+"DRAFT — not frozen." That line describes the document's pre-freeze life
+cycle and was not rewritten when the tag was cut; the `study2b-freeze`
+tag is the authoritative freeze event, and at that tag every calibration
+placeholder in the plan is filled with its frozen numeric value. The tag
+and this record are additive documentation only — no tagged content has
+been rewritten.
+
+참고: `STUDY2B_PLAN.md` 첫머리의 상태 표기는 여전히 "DRAFT — not
+frozen"이다. 이는 동결 이전 문서 수명주기를 서술한 문장으로, 태그 시점에
+고쳐 쓰지 않았을 뿐이다. 권위 있는 동결 사건은 `study2b-freeze` 태그이며,
+그 태그 시점의 계획서에는 모든 보정 자리값이 동결된 수치로 채워져 있다.
+이 기록은 추가 문서화일 뿐, 태그된 내용은 일절 재작성하지 않았다.
 
 ## Planned layout / 예정 구조
 
