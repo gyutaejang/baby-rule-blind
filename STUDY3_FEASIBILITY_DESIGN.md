@@ -196,3 +196,73 @@ rather than post-hoc reported.
 전체 6조건 확증 설계와 상태 조작 배터리(가설 교체·순위 반전·롤백·절제)는
 Study 3로. 조작에 따른 예측 가능한 행동 변화가, 상태가 사후 보고가 아니라
 기능적으로 사용된다는 증거다.
+
+## 9. Idea backlog (not designed, not frozen) / 아이디어 보관 (미설계·미동결)
+
+### 9.1 Noisy judgment oracle: replacing the correctness bit with a decision-only model / 판정 오류가 있는 oracle: 정답 비트를 판단 전용 모델로 대체
+
+*Logged 2026-10-14 after acceptance of the Study 1/2/2b paper
+(COGSYS-D-26-00796R1). Not yet discussed in detail; to be developed in a
+later session.*
+*2026-10-14 논문 accept 직후 기록. 아직 상세 논의 전이며 나중 세션에서 발전시킬 것.*
+
+**Observation / 관찰.** The accepted paper's correctness bit is produced by
+the task environment (the oracle knows the hidden rule). Decision-only
+models released in Sept–Oct 2026 (TypeSafe AI's *Jev*, a model that returns
+a typed value, score, or calibrated probability instead of text; OpenAI's
+*Decisions API*, announced two weeks later with a similar bounded-answer
+contract) are candidate components for the same oracle slot. They are cheap
+enough to run at Study 2 scale (Jev advertised at roughly $0.04 per million
+input tokens, output unmetered; vendor figure, unverified).
+수락된 논문의 정답 비트는 환경(숨은 규칙을 아는 oracle)이 낸다. 2026년
+9~10월에 나온 판단 전용 모델(TypeSafe AI의 Jev: 텍스트 대신 타입이 정해진
+값·점수·보정 확률만 반환; 2주 뒤 발표된 OpenAI Decisions API도 유사한
+제한 응답 계약)은 같은 oracle 자리에 들어갈 수 있는 부품이다. Study 2
+규모로 돌릴 만큼 싸다(Jev 공시 가격 입력 백만 토큰당 약 $0.04, 출력 무과금;
+업체 수치, 미검증).
+
+**Question / 질문.** The paper showed that one bit of *correct* feedback,
+harvested by win-stay/lose-shift, suffices. What happens when the bit is
+emitted by a fallible judge? Concretely:
+논문은 '정확한' 한 비트를 WSLS가 수확하면 충분함을 보였다. 그 비트를
+'오류가 있는 판정자'가 낼 때는?
+
+1. **Robustness of the minimal policy / 최소 정책의 견고성**: accuracy of
+   WSLS (and RuleBlindFull) as a function of oracle error rate, including
+   asymmetric errors (false "correct" vs false "incorrect").
+   oracle 오류율(비대칭 오류 포함)에 따른 WSLS·RuleBlindFull 정확도.
+2. **Bit vs probability / 비트 대 확률**: the paper deliberately discarded
+   graded information. A judge that returns a calibrated probability lets
+   us test whether a thresholded bit loses anything, or whether a
+   confidence-weighted WSLS variant buys accuracy. This is the direct
+   contrast between the paper's "minimal sufficient feedback" and the
+   judgment model's richer output.
+   논문은 의도적으로 등급 정보를 버렸다. 보정 확률을 돌려주는 판정자로,
+   이진화한 비트가 무언가를 잃는지, 혹은 신뢰도 가중 WSLS 변형이 정확도를
+   더 얻는지 검증 가능. 논문의 '최소 충분 피드백'과 판단 모델의 더 풍부한
+   출력 사이의 직접 대조.
+3. **Judge sees what? / 판정자 입력 범위**: whether the judge is given the
+   hidden rule (then it is just a noisy oracle) or must infer correctness
+   from public history alone (then it is a second supervisor, and the
+   "derived-information block" of §7 applies to it in full).
+   판정자에게 숨은 규칙을 주는지(그러면 잡음 oracle), 공개 이력만으로
+   정답성을 추론하게 하는지(그러면 제2의 감독자이며 7절의 파생 정보 차단이
+   전면 적용됨).
+
+**Constraints inherited from the paper / 논문에서 이어받는 제약.** Frozen
+design before data contact; the judge's prompt/config pinned and logged per
+trial (§7.4); the minimal policy remains the primary comparator; no claim
+about the LLM alone. Keep separate from the state-carryover question in
+§§1–8: this is a change to the *feedback channel*, not to the supervisor's
+memory.
+데이터 접촉 전 설계 동결; 판정자 프롬프트·설정 고정 및 시행별 로그(7.4절);
+최소 정책이 1차 비교 대상; LLM 단독에 대한 주장 없음. 1~8절의 상태 이월
+질문과는 분리할 것: 이것은 감독자의 기억이 아니라 '피드백 채널'의 변경이다.
+
+**Sources / 출처** (as of 2026-10-14):
+- InfoQ, "TypeSafe AI Releases Jev: a Decision-Only Model That Returns Typed
+  Probabilities Instead of Text," Oct 2026.
+  https://www.infoq.com/news/2026/10/typesafe-ai-jev-released/
+- Fortune, "Jev, an AI for making quick decisions, has been a viral hit. But
+  OpenAI is hot on its heels," 2026-10-08.
+  https://fortune.com/2026/10/08/jev-an-ai-for-making-quick-decisions-has-been-a-viral-hit-in-silicon-valley-but-openai-is-hot-on-its-heels/
