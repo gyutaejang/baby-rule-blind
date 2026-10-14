@@ -29,4 +29,9 @@ jobs:
           python-version: "3.13"
 
       - name: Run mandatory gates
+        # UTF-8 stdout: the gates print bilingual messages, and on the
+        # cp1252 runner console a failure report would crash before it
+        # could say what failed (observed 2026-10-14).
+        env:
+          PYTHONUTF8: "1"
         run: python scripts/run_all_checks.py

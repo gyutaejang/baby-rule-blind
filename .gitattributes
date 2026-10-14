@@ -1,0 +1,4 @@
+# Frozen data: store and check out exact bytes. Manifest SHA-256 values were
+# computed on the files as written (CRLF records, bare LF inside quoted fields);
+# any line-ending conversion breaks the provenance gate.
+data/public_study2/** -text
